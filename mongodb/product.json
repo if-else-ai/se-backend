@@ -1,0 +1,28 @@
+{
+    "_id": "5d8b987f9f8b9f9c8c8b9f9",
+    "name": "Product 1",
+    "category": "Keyboard",
+    "price": 199.99,
+    "quantity": 10,
+    "detail": {
+        "color": "FFFFFF",
+        "switchId": [
+            "5d8b987f9f8b9f9c8c8b9f8",
+            "5d8b987f9f8b9f9c8c8b9f9"
+        ],
+        "language": "EN",
+        "layout": "75%"
+    },
+    "description": "Wow! This is so amazing!",
+    "tag": [
+        "Keyboard",
+        "Gaming",
+        "Gaming Keyboard"
+    ],
+    "image": [
+        "/opt/files/product/product1.jpg",
+        "/opt/files/product/product2.jpg"
+    ],
+    "createdAt": "2019-01-01T00:00:00.000Z",
+    "updatedAt": "2019-01-01T00:00:00.000Z"
+}
