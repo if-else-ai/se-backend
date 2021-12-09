@@ -12,5 +12,11 @@ services:
     ports:
       - 27017:27017
 
+  kibby-user:
+    build: ./backend/services/user
+    restart: always
+    ports:
+      - 5100:5000
+
 volumes:
   data: {}
