@@ -1,6 +1,7 @@
 package server
 
-func Start() {
+// Init
+func Init() {
 	router := NewRouter()
 	router.Run(":5000")
 }
