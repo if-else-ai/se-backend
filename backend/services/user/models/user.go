@@ -7,6 +7,7 @@ import (
 	"kibby/user/form"
 	"time"
 
+	
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,7 +22,7 @@ func (u UserModel) AddUser(name string,
 	telNo string,
 	address string,
 	dateOfBirth string,
-	gender string) (interface{}, error) {
+	gender string) (string, error) {
 
 	coll, err := database.GetDB()
 	if err != nil {
@@ -76,6 +77,49 @@ func (u UserModel) GetUsers() ([]form.User, error) {
 	if err = cursor.All(context.TODO(), &results); err != nil {
 		return []form.User{}, err
 	}
-
 	return results, nil
+}
+
+func (u UserModel) UpdateUser(id primitive.ObjectID,
+	name string,
+	telNo string,
+	address string,
+	dateOfBirth string,
+	gender string) (string, error) {
+
+	coll, err := database.GetDB()
+	if err != nil {
+		return "", err
+	}
+	dt, _ := time.Parse("2006-01-02", dateOfBirth)
+
+	//Document
+	doc := form.UserUpdate{
+		Name:        name,
+		TelNo:       telNo,
+		Address:     address,
+		DateOfBirth: primitive.NewDateTimeFromTime(dt),
+		Gender:      gender,
+	}
+	update := bson.D{{"$set",doc}}
+	if _ , err := coll.UpdateByID(context.TODO(),id,update); err != nil {
+		return "", errors.Wrap(err, "failed to update document")
+	}
+
+	return "update success",nil
+}
+
+//delete
+func (u UserModel) DeleteUser(id primitive.ObjectID) (string, error){
+	coll, err := database.GetDB()
+	if err != nil {
+		return "", err
+	}
+
+	filter := bson.D{{"_id",id}}
+
+	if _ ,err := coll.DeleteOne(context.TODO(),filter); err != nil{
+		return "", errors.Wrap(err, "failed to delete document")
+	}
+	return "delete success",nil
 }
