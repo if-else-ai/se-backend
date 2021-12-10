@@ -30,6 +30,7 @@ func (u UserModel) AddUser(name string,
 
 	dt, _ := time.Parse("2006-01-02", dateOfBirth)
 
+	// Document
 	doc := form.User{
 		ID:          primitive.NewObjectID(),
 		Name:        name,

@@ -20,7 +20,17 @@ services:
     environment:
       - MONGO_URI=mongodb://root:root@mongodb:27017
     ports:
-      - 5100:5000
+      - 5101:5000
+
+  kibby-product:
+    build: ./backend/services/product
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://root:root@mongodb:27017
+    ports:
+      - 5102:5000
 
 volumes:
   data: {}
