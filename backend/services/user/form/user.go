@@ -12,3 +12,11 @@ type User struct {
 	DateOfBirth primitive.DateTime `json:"dateOfBirth" bson:"dateOfBirth"`
 	Gender      string             `json:"gender" bson:"gender"`
 }
+
+type UserUpdate struct {
+	Name        string             `json:"name" bson:"name"`
+	TelNo       string             `json:"telNo" bson:"telNo"`
+	Address     string             `json:"address" bson:"address"`
+	DateOfBirth primitive.DateTime `json:"dateOfBirth" bson:"dateOfBirth"`
+	Gender      string             `json:"gender" bson:"gender"`
+}

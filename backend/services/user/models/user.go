@@ -49,6 +49,13 @@ func (u UserModel) AddUser(name string,
 
 	id := fmt.Sprint(result.InsertedID)
 
+	update := bson.D{{"$set", bson.D{
+		{"name", name},
+		{"telNo", telNo},
+	}}}
+
+	coll.UpdateByID(context.TODO(), id, update)
+
 	return id, nil
 }
 

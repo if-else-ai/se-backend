@@ -18,7 +18,7 @@ services:
     depends_on:
       - mongodb
     environment:
-      - MONGO_URI=mongodb://root:root@mongodb:27017
+      - MONGO_URI=mongodb://root:root@139.59.219.217:27017
     ports:
       - 5101:5000
 
@@ -28,7 +28,7 @@ services:
     depends_on:
       - mongodb
     environment:
-      - MONGO_URI=mongodb://root:root@mongodb:27017
+      - MONGO_URI=mongodb://root:root@139.59.219.217:27017
     ports:
       - 5102:5000
 
