@@ -1,0 +1,19 @@
+{
+    "folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "backend/services/order"
+		},
+		{
+			"path": "backend/services/product"
+		},
+		{
+			"path": "backend/services/product-cart"
+		},
+		{
+			"path": "backend/services/user"
+		}
+	]
+}
