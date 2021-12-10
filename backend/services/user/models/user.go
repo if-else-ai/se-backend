@@ -21,7 +21,7 @@ func (u UserModel) AddUser(name string,
 	telNo string,
 	address string,
 	dateOfBirth string,
-	gender string) (interface{}, error) {
+	gender string) (string, error) {
 
 	coll, err := database.GetDB()
 	if err != nil {
