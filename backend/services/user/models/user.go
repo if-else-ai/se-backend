@@ -2,10 +2,14 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"kibby/user/database"
 	"kibby/user/form"
+	"time"
 
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserModel struct{}
@@ -14,6 +18,9 @@ type UserModel struct{}
 func (u UserModel) AddUser(name string,
 	email string,
 	password string,
+	telNo string,
+	address string,
+	dateOfBirth string,
 	gender string) (interface{}, error) {
 
 	coll, err := database.GetDB()
@@ -21,19 +28,25 @@ func (u UserModel) AddUser(name string,
 		return "", err
 	}
 
+	dt, _ := time.Parse("2006-01-02", dateOfBirth)
+
 	doc := form.User{
-		Name:     name,
-		Email:    email,
-		Password: password,
-		Gender:   gender,
+		ID:          primitive.NewObjectID(),
+		Name:        name,
+		Email:       email,
+		Password:    password,
+		TelNo:       telNo,
+		Address:     address,
+		DateOfBirth: primitive.NewDateTimeFromTime(dt),
+		Gender:      gender,
 	}
 
 	result, err := coll.InsertOne(context.TODO(), doc)
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to insert document")
 	}
 
-	id := result.InsertedID
+	id := fmt.Sprint(result.InsertedID)
 
 	return id, nil
 }

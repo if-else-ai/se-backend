@@ -20,13 +20,19 @@ func (uc UserController) AddUser(c *gin.Context) {
 		return
 	}
 
-	res, err := md.AddUser(req.Name, req.Email, req.Password, req.Gender)
+	res, err := md.AddUser(req.Name,
+		req.Email,
+		req.Password,
+		req.TelNo,
+		req.Address,
+		req.DateOfBirth.Time().Format("2006-01-02"),
+		req.Gender)
 	if err != nil {
-		panic(err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, gin.H{"id": res})
 	return
 }
 
