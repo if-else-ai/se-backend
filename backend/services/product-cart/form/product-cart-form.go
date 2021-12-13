@@ -3,8 +3,9 @@ package form
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type ProductCartForm struct {
-	UserID  primitive.ObjectID `json:"userId" bson:"userId"`
-	Product []Products         `json:"products" bson:product`
+	UserID     primitive.ObjectID `json:"userId" bson:"userId"`
+	Product    []Products         `json:"products" bson:product`
+	TotalPrice float32            `json:"totalPrice" bson:totalPrice`
 }
 
 type Products struct {
@@ -16,6 +17,7 @@ type Products struct {
 
 type OptionDetails struct {
 	Name     string  `json:"name" bson:"name"`
-	Select   string  `json:"select" bson:"select"`
+	Select   string  `json:"select" bson:"select"` //Select Attibute
 	PriceAdd float32 `json:"priceAdd" bson:"priceAdd"`
 }
+
