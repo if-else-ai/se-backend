@@ -1,7 +1,11 @@
 package main
 
-import "kibby/order/server"
+import (
+	"kibby/order/database"
+	"kibby/order/server"
+)
 
 func main() {
-	server.Start()
+	database.Init()
+	server.Init()
 }
