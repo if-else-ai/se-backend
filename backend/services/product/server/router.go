@@ -21,7 +21,10 @@ func NewRouter() *gin.Engine {
 		})
 	})
 	router.GET("/products", productController.GetProducts)
+	router.GET("/product/:id", productController.GetProductByID)
 	router.POST("/product", productController.AddProduct)
+	router.GET("/image/:image", productController.GetProductImage)
+	router.POST("/image", productController.UploadProductImage)
 
 	return router
 }

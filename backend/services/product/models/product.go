@@ -33,6 +33,21 @@ func (p ProductModel) GetProducts() ([]form.Product, error) {
 	return results, nil
 }
 
+// GetProductByID
+func (p ProductModel) GetProductByID(id primitive.ObjectID) (form.Product, error) {
+	coll, err := database.GetDB()
+	if err != nil {
+		return form.Product{}, err
+	}
+
+	var result form.Product
+	if err := coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&result); err != nil {
+		return form.Product{}, errors.Wrap(err, "failed to get product")
+	}
+
+	return result, nil
+}
+
 // AddProduct
 func (p ProductModel) AddProduct(name string,
 	category string,

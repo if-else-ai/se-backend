@@ -10,6 +10,7 @@ type Product struct {
 	Description string             `json:"description" bson:"description"`
 	Quantity    int32              `json:"quantity" bson:"quantity"`
 	Option      []ProductOption    `json:"option" bson:"option"`
+	Image       []string           `json:"image" bson:"image"`
 	Tag         []string           `json:"tag" bson:"tag"`
 }
 
