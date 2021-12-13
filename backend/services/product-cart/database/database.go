@@ -14,7 +14,7 @@ var connectionURI string
 
 //Init
 func Init() {
-	connectionURI = os.Getenv("MANGO_URI")
+	connectionURI = os.Getenv("MONGO_URI")
 }
 
 //GetDB
@@ -31,6 +31,6 @@ func GetDB() (*mongo.Collection, error) {
 		return nil, errors.Wrap(err, "failed to ping mongo")
 	}
 
-	coll := client.Database("kibby").Collection("product-cart")
+	coll := client.Database("kibby").Collection("productCart")
 	return coll, err
 }
