@@ -50,13 +50,6 @@ func (u UserModel) AddUser(name string,
 
 	id := fmt.Sprint(result.InsertedID)
 
-	update := bson.D{{"$set", bson.D{
-		{"name", name},
-		{"telNo", telNo},
-	}}}
-
-	coll.UpdateByID(context.TODO(), id, update)
-
 	return id, nil
 }
 
@@ -78,6 +71,19 @@ func (u UserModel) GetUsers() ([]form.User, error) {
 		return []form.User{}, err
 	}
 	return results, nil
+}
+//GetUserByID
+func (u UserModel) GetUserByID(id primitive.ObjectID) (form.User, error) {
+	coll, err := database.GetDB()
+	if err != nil {
+		return form.User{}, err
+	}
+
+	var result form.User
+	if err := coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&result); err != nil {
+		return form.User{}, errors.Wrap(err, "failed to get product")
+	}
+	return result, nil
 }
 
 func (u UserModel) UpdateUser(id primitive.ObjectID,

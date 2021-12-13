@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserController struct{}
@@ -49,6 +50,27 @@ func (uc UserController) GetUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 	return
 }
+
+//GetUsersByID
+func (uc UserController) GetUsersByID(c *gin.Context) {
+	var md models.UserModel
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	res, err := md.GetUserByID(id)
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+	return
+}
+
 
 //UpdateUser
 func (uc UserController) UpdateUser(c *gin.Context){
