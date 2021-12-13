@@ -1,6 +1,6 @@
 package controllers
 
-import(
+import (
 	"encoding/json"
 	"io/ioutil"
 	"kibby/product-cart/form"
@@ -9,6 +9,7 @@ import(
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type ProductCartController struct{}
@@ -38,5 +39,25 @@ func (pc ProductCartController) AddProductCart(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"id": res})
+	return
+}
+
+//GetProductCartByID
+func (pc ProductCartController) GetProductCartByID(c *gin.Context) {
+	var md models.ProductCartModel
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	res, err := md.GetProductCartByID(id)
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 	return
 }

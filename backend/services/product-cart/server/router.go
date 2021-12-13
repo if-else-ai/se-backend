@@ -21,6 +21,8 @@ func NewRouter() *gin.Engine {
 		})
 	})
 	router.POST("/productCart", productCartController.AddProductCart)
+	router.GET("/productCart/:id", productCartController.GetProductCartByID)
 	
+
 	return router
 }
