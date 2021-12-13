@@ -4,16 +4,16 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Order struct {
     ID                  primitive.ObjectID      `json:"id" bson:"_id"`
-    Status              string                  `json:"name" bson:"name"`
-    Address             string                  `json:"category" bson:"category"`
-    Detail              []OrderDetail           `json:"price" bson:"price"`
-    CustomerDetail      []CustomerDetail        `json:"description" bson:"description"`
-    TrackingNumber      string                  `json:"tag" bson:"tag"`
+    Status              string                  `json:"status" bson:"status"`
+    Address             string                  `json:"address" bson:"address"`
+    Detail              OrderDetail             `json:"detail" bson:"detail"`
+    CustomerDetail      CustomerDetail          `json:"customerDetail" bson:"customerDetail"`
+    TrackingNumber      string                  `json:"trackingNumber" bson:"trackingNumber"`
 }
 
 type OrderDetail struct {
-    Product             []Product               `json:"product" bson:"product"`
-    TotalPrice          float32                 `json:"totalPrice" bson:"totaalPrice"`
+    Product             []Product               `json:"products" bson:"products"`
+    TotalPrice          float32                 `json:"totalPrice" bson:"totalPrice"`
     
 }
 
@@ -27,6 +27,6 @@ type Product struct {
 type CustomerDetail struct {
 	UserId 			primitive.ObjectID 			`json:"userId" bson:"userId"`
     Name	        string    					`json:"name" bson:"name"`
-    Tel     	  	string  					`json:"list" bson:"list"`
-    Email 			string 						`json:"priceAdded" bson:"priceAdded"`
+    Tel     	  	string  					`json:"telNo" bson:"telNo"`
+    Email 			string 						`json:"email" bson:"email"`
 }
