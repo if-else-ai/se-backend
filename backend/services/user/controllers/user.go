@@ -96,6 +96,8 @@ func (uc UserController) UpdateUser(c *gin.Context){
 	return 
 
 }
+
+//UpdatePassword
 func (us UserController) UpdatePassword(c *gin.Context){
 	var req form.User
 	var md models.UserModel
@@ -105,7 +107,7 @@ func (us UserController) UpdatePassword(c *gin.Context){
 		return
 	}
 	res, err := md.UpdatePassword(req.ID,req.Password)
-	
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

@@ -86,6 +86,7 @@ func (u UserModel) GetUserByID(id primitive.ObjectID) (form.User, error) {
 	return result, nil
 }
 
+//UpdateUser
 func (u UserModel) UpdateUser(id primitive.ObjectID,
 	name string,
 	email string,
@@ -116,6 +117,8 @@ func (u UserModel) UpdateUser(id primitive.ObjectID,
 
 	return "update success",nil
 }
+
+//UpdatePassword
 func (u UserModel) UpdatePassword(id primitive.ObjectID,
 	ps string) (string,error){
 
