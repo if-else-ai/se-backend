@@ -25,6 +25,7 @@ func NewRouter() *gin.Engine {
 	router.GET("/users", userController.GetUsers)
 	router.GET("/users/:id", userController.GetUsersByID)
 	router.PUT("/user", userController.UpdateUser)
+	router.PUT("/userP", userController.UpdatePassword)
 	router.DELETE("/user", userController.DeleteUser)
 
 	return router

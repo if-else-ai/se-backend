@@ -88,6 +88,7 @@ func (u UserModel) GetUserByID(id primitive.ObjectID) (form.User, error) {
 
 func (u UserModel) UpdateUser(id primitive.ObjectID,
 	name string,
+	email string,
 	telNo string,
 	address string,
 	dateOfBirth string,
@@ -102,6 +103,7 @@ func (u UserModel) UpdateUser(id primitive.ObjectID,
 	//Document
 	doc := form.UserUpdate{
 		Name:        name,
+		Email:		 email,
 		TelNo:       telNo,
 		Address:     address,
 		DateOfBirth: primitive.NewDateTimeFromTime(dt),
@@ -113,6 +115,22 @@ func (u UserModel) UpdateUser(id primitive.ObjectID,
 	}
 
 	return "update success",nil
+}
+func (u UserModel) UpdatePassword(id primitive.ObjectID,
+	ps string) (string,error){
+
+	coll, err := database.GetDB()
+	if err != nil {
+		return "", err
+	}
+	doc:= form.PasswordUpdate{
+		Password: ps,
+	}
+	update := bson.D{{"$set",doc}}
+	if _ , err := coll.UpdateByID(context.TODO(),id,update); err != nil {
+		return "", errors.Wrap(err, "failed to update document")
+	}
+	return "update password success",nil
 }
 
 //delete
