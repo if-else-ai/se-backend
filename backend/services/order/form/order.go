@@ -60,3 +60,10 @@ type CreateOrderResponse struct {
 	ID      string       `json:"id"`
 	Payment omise.Charge `json:"payment"`
 }
+
+type UpdateOrderStatusFrom struct {
+	ID             primitive.ObjectID `json:"id" bson:"_id"`
+	Status         string             `json:"status" bson:"status"`
+	PaymentID      string             `json:"paymentId" bson:"paymentId"`
+	TrackingNumber string             `json:"trackingNumber" bson:"trackingNumber"`
+}
