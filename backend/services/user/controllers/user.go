@@ -99,7 +99,14 @@ func (uc UserController) UpdateUser(c *gin.Context) {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	res, err := md.UpdateUser(req.ID,
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	res, err := md.UpdateUser(id,
 		req.Name,
 		req.Email,
 		req.TelNo,
@@ -137,16 +144,18 @@ func (us UserController) UpdatePassword(c *gin.Context) {
 
 //DeleteUser
 func (us UserController) DeleteUser(c *gin.Context) {
-	var req form.User
+	
 	var md models.UserModel
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		panic(err)
 		return
 	}
-	res, err := md.DeleteUser(req.ID)
+
+	res, err := md.DeleteUser(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		panic(err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": res})

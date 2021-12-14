@@ -204,7 +204,7 @@ func (u UserModel) DeleteUser(id primitive.ObjectID) (string, error) {
 		return "", err
 	}
 
-	filter := bson.D{{"_id", id}}
+	filter := bson.M{"_id":id}
 
 	if _, err := coll.DeleteOne(context.TODO(), filter); err != nil {
 		return "", errors.Wrap(err, "failed to delete document")
