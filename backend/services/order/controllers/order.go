@@ -49,14 +49,13 @@ func (oc OrderController) GetOrderByUserId(c *gin.Context) {
 // GetOrderById
 func (oc OrderController) GetOrderById(c *gin.Context) {
 	var md models.OrderModel
-
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		panic(err)
 		return
 	}
 
-	res, err := md.GetOrderByUserId(id)
+	res, err := md.GetOrderById(id)
 	if err != nil {
 		panic(err)
 		return
@@ -91,4 +90,26 @@ func (oc OrderController) CreateOrder(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, gin.H{"id": res})
 	return
+}
+
+//UpdateStatus
+func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context) {
+	var req form.Order
+	var md models.OrderModel
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, err := md.UpdateOrderStatusAndTracking(req.ID,
+		req.Status, req.Address, req.Detail, req.CustomerDetail, req.TrackingNumber,
+	)
+	if err != nil {
+		panic(err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": res})
+	return
+
 }
