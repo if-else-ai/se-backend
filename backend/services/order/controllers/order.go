@@ -1,4 +1,4 @@
- package controllers
+package controllers
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	 "go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type OrderController struct{}
@@ -26,7 +26,7 @@ func (oc OrderController) GetOrder(c *gin.Context) {
 	return
 }
 
-// //GetOrderByUserId
+//GetOrderByUserId
 func (oc OrderController) GetOrderByUserId(c *gin.Context) {
 	var md models.OrderModel
 
@@ -46,7 +46,7 @@ func (oc OrderController) GetOrderByUserId(c *gin.Context) {
 	return
 }
 
-//GetOrderById
+// GetOrderById
 func (oc OrderController) GetOrderById(c *gin.Context) {
 	var md models.OrderModel
 
@@ -66,8 +66,8 @@ func (oc OrderController) GetOrderById(c *gin.Context) {
 	return
 }
 
-//CreateOrder
-func (oc OrderController) CreateOrder(c *gin.Context){
+// CreateOrder
+func (oc OrderController) CreateOrder(c *gin.Context) {
 	var req form.Order
 	var md models.OrderModel
 
@@ -85,7 +85,7 @@ func (oc OrderController) CreateOrder(c *gin.Context){
 		req.Address,
 		req.Detail,
 		req.CustomerDetail,
-		req.TrackingNumber,)
+		req.TrackingNumber)
 	if err != nil {
 		panic(err)
 	}

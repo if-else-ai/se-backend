@@ -2,9 +2,13 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"kibby/order/database"
 	"kibby/order/form"
+	"os"
 
+	"github.com/omise/omise-go"
+	"github.com/omise/omise-go/operations"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -46,27 +50,43 @@ func (o OrderModel) GetOrderByUserId(id primitive.ObjectID) (form.CustomerDetail
 	return result, nil
 }
 
-//CreateOrder
-func (o OrderModel)	CreatOrder(status string,
+// CreateOrder
+func (o OrderModel) CreatOrder(status string,
 	address string,
 	detail form.OrderDetail,
 	customDetail form.CustomerDetail,
-	trackingNumber string,
-	) (string, error) {
-		coll,err := database.GetDB()
-		if err != nil {
-			return "", err
-		}
+	trackingNumber string) (string, error) {
+	coll, err := database.GetDB()
+	if err != nil {
+		return "", err
+	}
 
-		doc := form.Order{
-			ID: primitive.NewObjectID(),
-			Status: status,
-			Address: address,
-			Detail: detail,
-			CustomerDetail:customDetail,
-			TrackingNumber: trackingNumber,
-		}
-		result, err := coll.InsertOne(context.TODO(), doc)
+	client, err := omise.NewClient(os.Getenv("OMISE_PKEY"), os.Getenv("OMISE_SKEY"))
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create omise client")
+	}
+
+	source, createSource := &omise.Source{}, &operations.CreateSource{
+		Amount:   int64(detail.TotalPrice),
+		Currency: "thb",
+		Type:     "promptpay",
+	}
+
+	if err := client.Do(source, createSource); err != nil {
+		return "", errors.Wrap(err, "failed to create source")
+	}
+
+	fmt.Printf("source: %v\n", source)
+
+	doc := form.Order{
+		ID:             primitive.NewObjectID(),
+		Status:         status,
+		Address:        address,
+		Detail:         detail,
+		CustomerDetail: customDetail,
+		TrackingNumber: trackingNumber,
+	}
+	result, err := coll.InsertOne(context.TODO(), doc)
 	if err != nil {
 		return "", err
 	}
@@ -74,11 +94,11 @@ func (o OrderModel)	CreatOrder(status string,
 	id := result.InsertedID.(primitive.ObjectID).Hex()
 
 	return id, nil
-		
-	}
+
+}
 
 //GetOrderById
-func (o OrderModel) GetOrderById(id primitive.ObjectID) (form.Order, error){
+func (o OrderModel) GetOrderById(id primitive.ObjectID) (form.Order, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return form.Order{}, err
@@ -88,7 +108,7 @@ func (o OrderModel) GetOrderById(id primitive.ObjectID) (form.Order, error){
 	if err := coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&result); err != nil {
 		return form.Order{}, errors.Wrap(err, "failed to get OrderById")
 	}
-	
+
 	return result, nil
 }
 
