@@ -83,7 +83,7 @@ func (oc OrderController) CreateOrder(c *gin.Context){
 	res, err := md.CreatOrder(req.Status,
 		req.Address,
 		req.Detail,
-		req.CustomerDetail,
+		req.UserDetail,
 		req.TrackingNumber,)
 	if err != nil {
 		panic(err)
@@ -103,7 +103,7 @@ func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context){
 	}
 
 	res,err := md.UpdateOrderStatusAndTracking(req.ID,
-		req.Status,req.Address,req.Detail,req.CustomerDetail,req.TrackingNumber,
+		req.Status,req.Address,req.Detail,req.UserDetail,req.TrackingNumber,
 	)
 	if err != nil {
 		panic(err)
@@ -111,5 +111,26 @@ func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context){
 	}
 	c.JSON(http.StatusOK, gin.H{"message": res})
 	return 
+
+}
+
+//Delete
+func (oc OrderController) DeleteOrder(c *gin.Context) {
+	
+	var md models.OrderModel
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	res, err := md.DeleteOrder(id)
+	if err != nil {
+		panic(err)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": res})
+	return
 
 }

@@ -52,7 +52,7 @@ func (a AdminModel) AddAdmin(name string,
 	return id, nil
 }
 
-// GetUsers
+// GetAdnins
 func (a AdminModel) GetAdmins() ([]form.Admin, error) {
 	coll, err := database.GetDB()
 	if err != nil {
@@ -71,7 +71,7 @@ func (a AdminModel) GetAdmins() ([]form.Admin, error) {
 	}
 	return results, nil
 }
-//GetUserByID
+//GetAdminByID
 func (a AdminModel) GetAdminByID(id primitive.ObjectID) (form.Admin, error) {
 	coll, err := database.GetDB()
 	if err != nil {
@@ -85,7 +85,7 @@ func (a AdminModel) GetAdminByID(id primitive.ObjectID) (form.Admin, error) {
 	return result, nil
 }
 
-//UpdateUser
+//UpdateAdmin
 func (a AdminModel) UpdateAdmin(id primitive.ObjectID,
 	name string,
 	email string,
@@ -135,7 +135,7 @@ func (a AdminModel) UpdatePassword(id primitive.ObjectID,
 	return "update password success",nil
 }
 
-//delete
+//deleteAdmin
 func (a AdminModel) DeleteAdmin(id primitive.ObjectID) (string, error){
 	coll, err := database.GetDB()
 	if err != nil {

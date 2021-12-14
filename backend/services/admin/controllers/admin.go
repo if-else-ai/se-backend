@@ -52,7 +52,7 @@ func (ac AdminController) GetAdmins(c *gin.Context) {
 }
 
 //GetUsersByID
-func (a AdminController) GetAdminByID(c *gin.Context) {
+func (ac AdminController) GetAdminByID(c *gin.Context) {
 	var md models.AdminModel
 
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))

@@ -19,10 +19,11 @@ func NewRouter() *gin.Engine {
 		})
 	})
 	router.GET("/orders", orderController.GetOrder)
-	router.GET("/order/:userId", orderController.GetOrderByUserId)
+	router.GET("/orderByUser/:userId", orderController.GetOrderByUserId)
 	router.GET("/orderById/:id", orderController.GetOrderById)
 	router.POST("/order",orderController.CreateOrder)
 	router.PUT("/order",orderController.UpdateOrderStatusAndTracking)
+	router.DELETE("/order/:id",orderController.DeleteOrder)
 
 	return router
 }

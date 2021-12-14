@@ -7,7 +7,7 @@ type Order struct {
     Status              string                  `json:"status" bson:"status"`
     Address             string                  `json:"address" bson:"address"`
     Detail              OrderDetail             `json:"detail" bson:"detail"`
-    CustomerDetail      CustomerDetail          `json:"customerDetail" bson:"customerDetail"`
+    UserDetail          UserDetail              `json:"userDetail" bson:"userDetail"`
     TrackingNumber      string                  `json:"trackingNumber" bson:"trackingNumber"`
 }
 
@@ -22,9 +22,17 @@ type Product struct {
     Name         	string          			`json:"name" bson:"name"`
     Price        	float32         			`json:"price" bson:"price"`
     Quantity     	int32          				`json:"quantity" bson:"quantity"`
+    Option          []ProductOption             `json:"option" bson:"option"`
+    
 }
 
-type CustomerDetail struct {
+type ProductOption struct {
+	Name            string                      `json:"name" bson:"name"`
+	Select          string                      `json:"select" bson:"select"`
+	PriceAdded      float32                     `json:"priceAdded" bson:"priceAdded"`
+}
+
+type UserDetail struct {
 	UserId 			primitive.ObjectID 			`json:"userId" bson:"userId"`
     Name	        string    					`json:"name" bson:"name"`
     Tel     	  	string  					`json:"telNo" bson:"telNo"`
