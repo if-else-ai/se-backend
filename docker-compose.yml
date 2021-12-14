@@ -17,8 +17,11 @@ services:
     restart: always
     depends_on:
       - mongodb
+      - redis
     environment:
       - MONGO_URI=mongodb://root:root@139.59.219.217:27017
+      - REDIS_ADDRESS=redis:6379
+      - ACCESS_TOKEN_SECRET=qwerty
     ports:
       - 5101:5000
 
@@ -51,6 +54,8 @@ services:
       - mongodb
     environment:
       - MONGO_URI=mongodb://root:root@139.59.219.217:27017
+      - OMISE_PKEY=pkey_test_5pniqdbf4xmywrn0w8p
+      - OMISE_SKEY=skey_test_5pniqdbfeu5nje45dbv
     ports:
       - 5105:5000
 

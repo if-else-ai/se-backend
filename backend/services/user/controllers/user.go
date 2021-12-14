@@ -11,6 +11,44 @@ import (
 
 type UserController struct{}
 
+// Register
+func (uc UserController) Register(c *gin.Context) {
+	var req form.RegisterForm
+	var md models.UserModel
+
+	if err := c.ShouldBind(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, statusCode, err := md.Register(req.Email, req.Password)
+	if err != nil {
+		c.AbortWithStatusJSON(statusCode, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+// Login
+func (uc UserController) Login(c *gin.Context) {
+	var req form.LoginForm
+	var md models.UserModel
+
+	if err := c.ShouldBind(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, statusCode, err := md.Login(req.Email, req.Password)
+	if err != nil {
+		c.AbortWithStatusJSON(statusCode, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(statusCode, res)
+}
+
 // AddUser
 func (uc UserController) AddUser(c *gin.Context) {
 	var req form.User
@@ -125,7 +163,7 @@ func (us UserController) UpdatePassword(c *gin.Context) {
 
 //DeleteUser
 func (us UserController) DeleteUser(c *gin.Context) {
-	
+
 	var md models.UserModel
 
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))

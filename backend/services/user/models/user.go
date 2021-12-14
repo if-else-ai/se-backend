@@ -6,50 +6,93 @@ import (
 	"io"
 	"kibby/user/database"
 	"kibby/user/form"
+	"net/http"
 	"time"
 
-	"github.com/alexedwards/argon2id"
+	// "github.com/alexedwards/argon2id"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type UserModel struct{}
 
 // Register
-func (u UserModel) Register(email string,
-	password string,
-	passwordSalt string) (string, error) {
+func (u UserModel) Register(email string, password string) (form.RegisterResponseForm, int, error) {
 	coll, err := database.GetDB()
 	if err != nil {
-		return "", err
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, err
+	}
+
+	// Check if email already exists
+	findEmailRes := coll.FindOne(context.TODO(), bson.M{"email": email})
+	if findEmailRes.Err() == nil {
+		return form.RegisterResponseForm{}, http.StatusBadRequest, errors.New("email already exists")
 	}
 
 	// Generate password salt
 	salt := make([]byte, 64)
 	_, err = io.ReadFull(rand.Reader, salt)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to generate password salt")
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to generate password salt")
 	}
 
-	// Argon2 hash password
+	// Hash password
 	saltedPassword := password + string(salt)
-	hashedPassword, err := argon2id.CreateHash(saltedPassword, argon2id.DefaultParams)
+	// hashedPassword, err := argon2id.CreateHash(saltedPassword, argon2id.DefaultParams)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), 10)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to hash password")
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to hash password")
 	}
 
 	// Document to insert
 	doc := form.RegisterForm{
 		ID:           primitive.NewObjectID(),
 		Email:        email,
-		Password:     hashedPassword,
-		PasswordSalt: string(salt),
+		Password:     string(hashedPassword),
+		PasswordSalt: salt,
 	}
 
-	coll.InsertOne(context.TODO(), doc)
+	res, err := coll.InsertOne(context.TODO(), doc)
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to insert document")
+	}
 
-	return "", nil
+	id := res.InsertedID.(primitive.ObjectID).Hex()
+
+	return form.RegisterResponseForm{
+		ID: id,
+	}, http.StatusOK, nil
+}
+
+// Login
+func (u UserModel) Login(email string, password string) (form.LoginResponseForm, int, error) {
+	coll, err := database.GetDB()
+	if err != nil {
+		return form.LoginResponseForm{}, http.StatusInternalServerError, err
+	}
+
+	FindEmailRes := coll.FindOne(context.TODO(), bson.M{"email": email})
+	if FindEmailRes.Err() != nil {
+		return form.LoginResponseForm{}, http.StatusBadRequest, errors.New("email not found")
+	}
+
+	var user form.LoginResultForm
+	if err := FindEmailRes.Decode(&user); err != nil {
+		return form.LoginResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to decode document")
+	}
+
+	// Check if password is correct
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password+string(user.PasswordSalt))); err != nil {
+		return form.LoginResponseForm{}, http.StatusUnauthorized, errors.New("password is incorrect")
+	}
+
+	id := user.ID.Hex()
+
+	return form.LoginResponseForm{
+		ID: id,
+	}, http.StatusOK, nil
 }
 
 // AddUser
@@ -181,7 +224,7 @@ func (u UserModel) DeleteUser(id primitive.ObjectID) (string, error) {
 		return "", err
 	}
 
-	filter := bson.M{"_id":id}
+	filter := bson.M{"_id": id}
 
 	if _, err := coll.DeleteOne(context.TODO(), filter); err != nil {
 		return "", errors.Wrap(err, "failed to delete document")
