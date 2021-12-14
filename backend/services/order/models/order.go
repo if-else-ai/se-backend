@@ -163,6 +163,7 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 			Status:         status,
 			TrackingNumber: trackingNumber,
 		}
+		
 	}
 
 	update := bson.D{{"$set", doc}}
