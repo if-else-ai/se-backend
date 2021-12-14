@@ -71,9 +71,8 @@ func (uc UserController) GetUsersByID(c *gin.Context) {
 	return
 }
 
-
 //UpdateUser
-func (uc UserController) UpdateUser(c *gin.Context){
+func (uc UserController) UpdateUser(c *gin.Context) {
 	var req form.User
 	var md models.UserModel
 
@@ -93,12 +92,12 @@ func (uc UserController) UpdateUser(c *gin.Context){
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": res})
-	return 
+	return
 
 }
 
 //UpdatePassword
-func (us UserController) UpdatePassword(c *gin.Context){
+func (us UserController) UpdatePassword(c *gin.Context) {
 	var req form.User
 	var md models.UserModel
 
@@ -106,19 +105,19 @@ func (us UserController) UpdatePassword(c *gin.Context){
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	res, err := md.UpdatePassword(req.ID,req.Password)
+	res, err := md.UpdatePassword(req.ID, req.Password)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": res})
-	return 
-		
+	return
+
 }
 
 //DeleteUser
-func (us UserController) DeleteUser(c *gin.Context){
+func (us UserController) DeleteUser(c *gin.Context) {
 	var req form.User
 	var md models.UserModel
 
@@ -126,12 +125,12 @@ func (us UserController) DeleteUser(c *gin.Context){
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	res, err := md.DeleteUser(req.ID,)
+	res, err := md.DeleteUser(req.ID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": res})
-	return 
+	return
 
 }

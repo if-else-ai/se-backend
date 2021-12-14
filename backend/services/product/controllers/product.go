@@ -69,7 +69,6 @@ func (pc ProductController) AddProduct(c *gin.Context) {
 
 	if err := c.Bind(&req); err != nil {
 		panic(err)
-		return
 	}
 
 	res, err := md.AddProduct(req.Name,
