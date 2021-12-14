@@ -11,6 +11,25 @@ import (
 
 type UserController struct{}
 
+// Register
+func (uc UserController) Register(c *gin.Context) {
+	var req form.RegisterForm
+	var md models.UserModel
+
+	if err := c.ShouldBind(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, statusCode, err := md.Register(req.Email, req.Password)
+	if err != nil {
+		c.AbortWithStatusJSON(statusCode, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
 // AddUser
 func (uc UserController) AddUser(c *gin.Context) {
 	var req form.User

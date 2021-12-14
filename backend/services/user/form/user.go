@@ -20,6 +20,11 @@ type RegisterForm struct {
 	PasswordSalt string             `json:"passwordSalt" bson:"passwordSalt"`
 }
 
+type RegisterResponseForm struct {
+	ID    string `json:"id"`
+	Token string `json:"token"`
+}
+
 type UserUpdate struct {
 	Name        string             `json:"name" bson:"name"`
 	Email       string             `json:"email" bson:"email"`

@@ -4,8 +4,10 @@ import (
 	"context"
 	"crypto/rand"
 	"io"
+	"kibby/user/auth"
 	"kibby/user/database"
 	"kibby/user/form"
+	"net/http"
 	"time"
 
 	"github.com/alexedwards/argon2id"
@@ -17,26 +19,30 @@ import (
 type UserModel struct{}
 
 // Register
-func (u UserModel) Register(email string,
-	password string,
-	passwordSalt string) (string, error) {
+func (u UserModel) Register(email string, password string) (form.RegisterResponseForm, int, error) {
 	coll, err := database.GetDB()
 	if err != nil {
-		return "", err
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, err
+	}
+
+	// Check if email already exists
+	findEmailRes := coll.FindOne(context.TODO(), bson.M{"email": email})
+	if findEmailRes.Err() == nil {
+		return form.RegisterResponseForm{}, http.StatusBadRequest, errors.New("email already exists")
 	}
 
 	// Generate password salt
 	salt := make([]byte, 64)
 	_, err = io.ReadFull(rand.Reader, salt)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to generate password salt")
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to generate password salt")
 	}
 
 	// Argon2 hash password
 	saltedPassword := password + string(salt)
 	hashedPassword, err := argon2id.CreateHash(saltedPassword, argon2id.DefaultParams)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to hash password")
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to hash password")
 	}
 
 	// Document to insert
@@ -47,9 +53,26 @@ func (u UserModel) Register(email string,
 		PasswordSalt: string(salt),
 	}
 
-	coll.InsertOne(context.TODO(), doc)
+	res, err := coll.InsertOne(context.TODO(), doc)
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to insert document")
+	}
 
-	return "", nil
+	id := res.InsertedID.(primitive.ObjectID).Hex()
+
+	// Create token and auth
+	tokenDetails, err := auth.CreateToken()
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, err
+	}
+	if err := auth.CreateAuth(id, tokenDetails); err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, err
+	}
+
+	return form.RegisterResponseForm{
+		ID:    id,
+		Token: tokenDetails.AccessToken,
+	}, http.StatusOK, nil
 }
 
 // AddUser

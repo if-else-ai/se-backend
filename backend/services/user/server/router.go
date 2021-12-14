@@ -21,6 +21,7 @@ func NewRouter() *gin.Engine {
 		})
 	})
 
+	router.POST("/register", userController.Register)
 	router.POST("/user", userController.AddUser)
 	router.GET("/users", userController.GetUsers)
 	router.GET("/users/:id", userController.GetUsersByID)
