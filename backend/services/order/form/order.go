@@ -4,6 +4,7 @@ import "go.mongodb.org/mongo-driver/bson/primitive"
 
 type Order struct {
     ID                  primitive.ObjectID      `json:"id" bson:"_id"`
+    UserId 			    primitive.ObjectID 		`json:"userId" bson:"userId"`
     Status              string                  `json:"status" bson:"status"`
     Address             string                  `json:"address" bson:"address"`
     Detail              OrderDetail             `json:"detail" bson:"detail"`
@@ -12,7 +13,7 @@ type Order struct {
 }
 
 type OrderDetail struct {
-    Product             []Product               `json:"products" bson:"products"`
+    Product             []Product               `json:"product" bson:"product"`
     TotalPrice          float32                 `json:"totalPrice" bson:"totalPrice"`
     
 }
@@ -33,7 +34,7 @@ type ProductOption struct {
 }
 
 type UserDetail struct {
-	UserId 			primitive.ObjectID 			`json:"userId" bson:"userId"`
+	
     Name	        string    					`json:"name" bson:"name"`
     Tel     	  	string  					`json:"telNo" bson:"telNo"`
     Email 			string 						`json:"email" bson:"email"`

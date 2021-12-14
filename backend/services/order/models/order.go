@@ -39,7 +39,7 @@ func (o OrderModel) GetOrderByUserId(userId primitive.ObjectID) ([]form.Order, e
 		return []form.Order{}, err
 	}
 	
-	cursor, err := coll.Find(context.TODO(),bson.M{"userDetail": bson.M{"userId": userId}})
+	cursor, err := coll.Find(context.TODO(),bson.M{"userId": userId})
 	if err != nil {
 		return []form.Order{}, errors.Wrap(err, "failed to find Order")
 	}

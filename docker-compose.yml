@@ -17,7 +17,6 @@ services:
     restart: always
     depends_on:
       - mongodb
-      - redis
     environment:
       - MONGO_URI=mongodb://root:root@139.59.219.217:27017
       - REDIS_ADDRESS=redis:6379
