@@ -93,6 +93,32 @@ func (o OrderModel) GetOrderById(id primitive.ObjectID) (form.Order, error){
 }
 
 //UpdateOrderStatus&Tracking
-// func (o OrderModel)  UpdateOrderStatusAndTracking() (string, error{
+func (o OrderModel)  UpdateOrderStatusAndTracking(id primitive.ObjectID,
+	status string,
+	address string,
+	detail form.OrderDetail,
+	customDetail form.CustomerDetail,
+	trackingNumber string,) (string, error){
+	coll,err := database.GetDB()
+	if err != nil {
+		return "",err
+	}
+		doc := form.OrderUpdate{
+				Status: status,}
 
-// }
+		if status =="shipping"{
+			doc = form.OrderUpdate{
+			Status: status,
+			TrackingNumber: trackingNumber,
+			}
+		}
+		
+
+	update := bson.D{{"$set",doc}}
+	if _ , err := coll.UpdateByID(context.TODO(),id,update); err != nil {
+		return "", errors.Wrap(err, "failed to update status")
+	}
+
+	return "update success",nil
+
+}

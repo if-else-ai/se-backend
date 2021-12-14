@@ -52,6 +52,16 @@ services:
     ports:
         - 5104:5000
 
+  kibby-admin:
+    build: ./backend/services/admin
+    restart: always
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://root:root@139.59.219.217:27017
+    ports:
+      - 5105:5000
+
   
 
 volumes:

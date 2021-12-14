@@ -30,3 +30,8 @@ type CustomerDetail struct {
     Tel     	  	string  					`json:"telNo" bson:"telNo"`
     Email 			string 						`json:"email" bson:"email"`
 }
+
+type OrderUpdate struct{
+    Status              string                  `json:"status" bson:"status"`
+    TrackingNumber      string                  `json:"trackingNumber" bson:"trackingNumber"`
+}
