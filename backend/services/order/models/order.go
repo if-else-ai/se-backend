@@ -2,8 +2,15 @@ package models
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"kibby/order/database"
 	"kibby/order/form"
+	"math"
+	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
@@ -68,34 +75,72 @@ func (o OrderModel) GetOrderById(id primitive.ObjectID) (form.Order, error) {
 	return result, nil
 }
 
-//CreateOrder
-func (o OrderModel) CreatOrder(status string,
+// CreateOrder
+func (o OrderModel) CreatOrder(userId primitive.ObjectID,
+	status string,
 	address string,
 	detail form.OrderDetail,
 	userDetail form.UserDetail,
-	trackingNumber string,
-) (string, error) {
+	trackingNumber string) (form.CreateOrderResponse, error) {
 	coll, err := database.GetDB()
 	if err != nil {
-		return "", err
+		return form.CreateOrderResponse{}, err
 	}
 
-	doc := form.Order{
-		ID:             primitive.NewObjectID(),
-		Status:         status,
-		Address:        address,
-		Detail:         detail,
-		UserDetail: 	userDetail,
+	data := url.Values{
+		"amount":            {fmt.Sprintf("%f", math.Round(float64(detail.TotalPrice*100)))},
+		"currency":          {"THB"},
+		"source[type]":      {"promptpay"},
+		"metadata[user_id]": {userId.Hex()},
+	}
+
+	omiseReq, err := http.NewRequest("POST", "https://api.omise.co/charges", strings.NewReader(data.Encode()))
+	if err != nil {
+		return form.CreateOrderResponse{}, errors.Wrap(err, "failed to create omise request")
+	}
+
+	omiseReq.Header.Add("Authorization", "Basic c2tleV90ZXN0XzVwbmlxZGJmZXU1bmplNDVkYnY6OHhYTSZrcGJRQDlad0VsYmlpWlIzVkhP")
+
+	omiseRes, err := http.DefaultClient.Do(omiseReq)
+	if err != nil {
+		return form.CreateOrderResponse{}, errors.Wrap(err, "failed to create omise request")
+	}
+
+	omiseResData, err := ioutil.ReadAll(omiseRes.Body)
+	if err != nil {
+		return form.CreateOrderResponse{}, errors.Wrap(err, "failed to read omise response")
+	}
+
+	var response form.CreateOrderResponse
+	if err := json.Unmarshal(omiseResData, &response.Payment); err != nil {
+		return form.CreateOrderResponse{}, errors.Wrap(err, "failed to unmarshal omise response")
+	}
+
+	// Document to insert
+	doc := form.CreateOrderForm{
+		ID:      primitive.NewObjectID(),
+		UserID:  userId,
+		Status:  status,
+		Address: address,
+		Detail: form.OrderDetail{
+			TotalPrice: detail.TotalPrice,
+			Product:    detail.Product,
+			Payment:    response.Payment,
+		},
+		UserDetail:     userDetail,
 		TrackingNumber: trackingNumber,
 	}
+
 	result, err := coll.InsertOne(context.TODO(), doc)
 	if err != nil {
-		return "", err
+		return form.CreateOrderResponse{}, errors.Wrap(err, "failed to insert order")
 	}
 
 	id := result.InsertedID.(primitive.ObjectID).Hex()
 
-	return id, nil
+	response.ID = id
+
+	return response, nil
 
 }
 
@@ -128,14 +173,15 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 	return "update success", nil
 
 }
+
 //deleteOrder
-func(o OrderModel)DeleteOrder(id primitive.ObjectID)(string,error){
+func (o OrderModel) DeleteOrder(id primitive.ObjectID) (string, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return "", err
 	}
 
-	filter := bson.M{"_id":id}
+	filter := bson.M{"_id": id}
 
 	if _, err := coll.DeleteOne(context.TODO(), filter); err != nil {
 		return "", errors.Wrap(err, "failed to delete document")

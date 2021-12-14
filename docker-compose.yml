@@ -40,25 +40,13 @@ services:
     build: ./backend/services/order
     restart: always
     depends_on:
-        - mongodb
-    environment:
-        - MONGO_URI=mongodb://root:root@139.59.219.217:27017
-    ports:
-        - 5104:5000
-
-  kibby-admin:
-    build: ./backend/services/admin
-    restart: always
-    depends_on:
       - mongodb
     environment:
       - MONGO_URI=mongodb://root:root@139.59.219.217:27017
       - OMISE_PKEY=pkey_test_5pniqdbf4xmywrn0w8p
       - OMISE_SKEY=skey_test_5pniqdbfeu5nje45dbv
     ports:
-      - 5105:5000
-
-  
+      - 5104:5000
 
 volumes:
   data: {}

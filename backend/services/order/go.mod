@@ -36,4 +36,4 @@ require (
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 )
 
-require github.com/omise/omise-go v1.0.7 // indirect
+require github.com/omise/omise-go v1.0.7
