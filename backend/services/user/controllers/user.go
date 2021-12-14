@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserController struct{}
@@ -50,6 +51,27 @@ func (uc UserController) GetUsers(c *gin.Context) {
 	return
 }
 
+//GetUsersByID
+func (uc UserController) GetUsersByID(c *gin.Context) {
+	var md models.UserModel
+
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	res, err := md.GetUserByID(id)
+	if err != nil {
+		panic(err)
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+	return
+}
+
+
 //UpdateUser
 func (uc UserController) UpdateUser(c *gin.Context){
 	var req form.User
@@ -61,6 +83,7 @@ func (uc UserController) UpdateUser(c *gin.Context){
 	}
 	res, err := md.UpdateUser(req.ID,
 		req.Name,
+		req.Email,
 		req.TelNo,
 		req.Address,
 		req.DateOfBirth.Time().Format("2006-01-02"),
@@ -72,6 +95,26 @@ func (uc UserController) UpdateUser(c *gin.Context){
 	c.JSON(http.StatusOK, gin.H{"message": res})
 	return 
 
+}
+
+//UpdatePassword
+func (us UserController) UpdatePassword(c *gin.Context){
+	var req form.User
+	var md models.UserModel
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+	res, err := md.UpdatePassword(req.ID,req.Password)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": res})
+	return 
+		
 }
 
 //DeleteUser
