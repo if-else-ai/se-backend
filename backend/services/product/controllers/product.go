@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
 	"kibby/product/form"
 	"kibby/product/models"
 	"mime/multipart"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -18,6 +18,8 @@ import (
 
 type ProductController struct{}
 
+var fileDst = "/opt/files/"
+
 // GetProducts
 func (pc ProductController) GetProducts(c *gin.Context) {
 	var md models.ProductModel
@@ -25,11 +27,9 @@ func (pc ProductController) GetProducts(c *gin.Context) {
 	res, err := md.GetProducts()
 	if err != nil {
 		panic(err)
-		return
 	}
 
 	c.JSON(http.StatusOK, res)
-	return
 }
 
 // GetProductByID
@@ -39,46 +39,36 @@ func (pc ProductController) GetProductByID(c *gin.Context) {
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
 		panic(err)
-		return
 	}
 
 	res, err := md.GetProductByID(id)
 	if err != nil {
 		panic(err)
-		return
 	}
 
 	c.JSON(http.StatusOK, res)
-	return
 }
 
 // GetProductImage
 func (pc ProductController) GetProductImage(c *gin.Context) {
 	name := c.Param("name")
 
-	data, err := os.ReadFile("/opt/files/" + name)
+	data, err := os.ReadFile(fileDst + name)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err})
 		return
 	}
 
 	c.Data(http.StatusOK, "", data)
-	return
 }
 
 // AddProduct
 func (pc ProductController) AddProduct(c *gin.Context) {
-	var req form.Product
+	var req form.AddProductForm
 	var md models.ProductModel
 
-	body, err := ioutil.ReadAll(c.Request.Body)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
-		return
-	}
-
-	if err := json.Unmarshal(body, &req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err})
+	if err := c.Bind(&req); err != nil {
+		panic(err)
 		return
 	}
 
@@ -94,40 +84,82 @@ func (pc ProductController) AddProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"id": res})
-	return
 }
 
-// UploadProductImage
-func (pc ProductController) UploadProductImage(c *gin.Context) {
-	var req struct {
-		Image []*multipart.FileHeader `form:"image"`
-	}
+// UpdateProduct
+func (pc ProductController) UpdateProduct(c *gin.Context) {
+	var req form.UpdateProductForm
+	var md models.ProductModel
 
-	if err := c.ShouldBind(&req); err != nil {
+	if err := c.Bind(&req); err != nil {
 		panic(err)
-		return
 	}
 
-	var res []string
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	if err != nil {
+		panic(err)
+	}
 
+	if err = md.UpdateProduct(id,
+		req.Name,
+		req.Category,
+		req.Price,
+		req.Description,
+		req.Quantity,
+		req.Option,
+		req.Tag); err != nil {
+		panic(err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "success"})
+}
+
+// AddProductImage
+func (pc ProductController) AddProductImage(c *gin.Context) {
+	var req struct {
+		ProductID string                  `form:"productId"`
+		Image     []*multipart.FileHeader `form:"image"`
+	}
+	var md models.ProductModel
+
+	if err := c.Bind(&req); err != nil {
+		panic(err)
+	}
+
+	id, err := primitive.ObjectIDFromHex(req.ProductID)
+	if err != nil {
+		panic(err)
+	}
+
+	product, err := md.GetProductByID(id)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("product: %v\n", product)
+
+	var imageRequest []string
 	multipartForm, err := c.MultipartForm()
 	if err != nil {
 		panic(err)
-		return
 	}
-	for s, _ := range multipartForm.File {
-		if s == "image" {
-			for _, file := range req.Image {
-				dst := "/opt/files/" + strconv.Itoa(int(time.Now().Unix())) + ".png"
-				res = append(res, dst)
-				if err := c.SaveUploadedFile(file, dst); err != nil {
-					panic(err)
-					return
-				}
-			}
+	images := multipartForm.File["image"]
+
+	i := len(product.Image) + 1
+	fmt.Printf("images: %v %v\n", len(images), i)
+	for _, image := range images {
+		filename := strconv.Itoa(i) + "-" + strconv.Itoa(int(time.Now().Unix())) + filepath.Ext(image.Filename)
+		fmt.Printf("filename: %v\n", filename)
+		imageRequest = append(imageRequest, "http://139.59.219.217:5102/image/"+filename)
+		if err := c.SaveUploadedFile(image, fileDst+filename); err != nil {
+			panic(err)
 		}
+		i++
 	}
 
-	c.JSON(http.StatusOK, gin.H{"image": res})
-	return
+	if err := md.AddProductImage(id, imageRequest); err != nil {
+		panic(err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{"image": imageRequest})
 }

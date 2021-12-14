@@ -2,12 +2,10 @@ package models
 
 import (
 	"context"
-	"fmt"
 	"kibby/user/database"
 	"kibby/user/form"
 	"time"
 
-	
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -48,14 +46,7 @@ func (u UserModel) AddUser(name string,
 		return "", errors.Wrap(err, "failed to insert document")
 	}
 
-	id := fmt.Sprint(result.InsertedID)
-
-	update := bson.D{{"$set", bson.D{
-		{"name", name},
-		{"telNo", telNo},
-	}}}
-
-	coll.UpdateByID(context.TODO(), id, update)
+	id := result.InsertedID.(primitive.ObjectID).Hex()
 
 	return id, nil
 }
@@ -101,25 +92,25 @@ func (u UserModel) UpdateUser(id primitive.ObjectID,
 		DateOfBirth: primitive.NewDateTimeFromTime(dt),
 		Gender:      gender,
 	}
-	update := bson.D{{"$set",doc}}
-	if _ , err := coll.UpdateByID(context.TODO(),id,update); err != nil {
+	update := bson.D{{"$set", doc}}
+	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 		return "", errors.Wrap(err, "failed to update document")
 	}
 
-	return "update success",nil
+	return "update success", nil
 }
 
 //delete
-func (u UserModel) DeleteUser(id primitive.ObjectID) (string, error){
+func (u UserModel) DeleteUser(id primitive.ObjectID) (string, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return "", err
 	}
 
-	filter := bson.D{{"_id",id}}
+	filter := bson.D{{"_id", id}}
 
-	if _ ,err := coll.DeleteOne(context.TODO(),filter); err != nil{
+	if _, err := coll.DeleteOne(context.TODO(), filter); err != nil {
 		return "", errors.Wrap(err, "failed to delete document")
 	}
-	return "delete success",nil
+	return "delete success", nil
 }
