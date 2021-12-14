@@ -100,9 +100,9 @@ func (oc OrderController) CreateOrder(c *gin.Context) {
 	return
 }
 
-//UpdateStatus
+// UpdateOrderStatusAndTracking
 func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context) {
-	var req form.Order
+	var req form.UpdateOrderStatusFrom
 	var md models.OrderModel
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -111,7 +111,9 @@ func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context) {
 	}
 
 	res, err := md.UpdateOrderStatusAndTracking(req.ID,
-		req.Status, req.Address, req.Detail, req.UserDetail, req.TrackingNumber,
+		req.Status,
+		req.PaymentID,
+		req.TrackingNumber,
 	)
 	if err != nil {
 		panic(err)
