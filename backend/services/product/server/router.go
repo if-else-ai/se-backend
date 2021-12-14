@@ -23,8 +23,9 @@ func NewRouter() *gin.Engine {
 	router.GET("/products", productController.GetProducts)
 	router.GET("/product/:id", productController.GetProductByID)
 	router.POST("/product", productController.AddProduct)
-	router.GET("/image/:image", productController.GetProductImage)
-	router.POST("/image", productController.UploadProductImage)
+	router.PUT("/product/:id", productController.UpdateProduct)
+	router.GET("/image/:name", productController.GetProductImage)
+	router.POST("/image", productController.AddProductImage)
 
 	return router
 }

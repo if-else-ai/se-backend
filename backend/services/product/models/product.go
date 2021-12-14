@@ -12,6 +12,8 @@ import (
 
 type ProductModel struct{}
 
+var fileDst = "/opt/files/"
+
 // GetProducts
 func (p ProductModel) GetProducts() ([]form.Product, error) {
 	coll, err := database.GetDB()
@@ -81,4 +83,57 @@ func (p ProductModel) AddProduct(name string,
 	id := result.InsertedID.(primitive.ObjectID).Hex()
 
 	return id, nil
+}
+
+// UpdateProduct
+func (p ProductModel) UpdateProduct(id primitive.ObjectID,
+	name string,
+	category string,
+	price float32,
+	description string,
+	quantity int32,
+	option []form.ProductOption,
+	tag []string) error {
+	coll, err := database.GetDB()
+	if err != nil {
+		return err
+	}
+
+	// Document to update
+	doc := form.UpdateProductForm{
+		Name:        name,
+		Category:    category,
+		Price:       price,
+		Description: description,
+		Quantity:    quantity,
+		Option:      option,
+		Tag:         tag,
+	}
+
+	if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", doc}}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// AddProductImage
+func (p ProductModel) AddProductImage(id primitive.ObjectID, image []string) error {
+	coll, err := database.GetDB()
+	if err != nil {
+		return err
+	}
+
+	var product form.Product
+	if err := coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&product); err != nil {
+		return err
+	}
+
+	product.Image = append(product.Image, image...)
+
+	if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", product}}); err != nil {
+		return err
+	}
+
+	return nil
 }

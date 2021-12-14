@@ -24,9 +24,9 @@ func NewRouter() *gin.Engine {
 	router.POST("/user", userController.AddUser)
 	router.GET("/users", userController.GetUsers)
 	router.GET("/users/:id", userController.GetUsersByID)
-	router.PUT("/user", userController.UpdateUser)
-	router.PUT("/userP", userController.UpdatePassword)
-	router.DELETE("/user", userController.DeleteUser)
+	router.PUT("/users/:id", userController.UpdateUser)
+	router.PUT("/users/:id/password", userController.UpdatePassword)
+	router.DELETE("/users/:id", userController.DeleteUser)
 
 	return router
 }

@@ -2,18 +2,55 @@ package models
 
 import (
 	"context"
-	"fmt"
+	"crypto/rand"
+	"io"
 	"kibby/user/database"
 	"kibby/user/form"
 	"time"
 
-	
+	"github.com/alexedwards/argon2id"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserModel struct{}
+
+// Register
+func (u UserModel) Register(email string,
+	password string,
+	passwordSalt string) (string, error) {
+	coll, err := database.GetDB()
+	if err != nil {
+		return "", err
+	}
+
+	// Generate password salt
+	salt := make([]byte, 64)
+	_, err = io.ReadFull(rand.Reader, salt)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to generate password salt")
+	}
+
+	// Argon2 hash password
+	saltedPassword := password + string(salt)
+	hashedPassword, err := argon2id.CreateHash(saltedPassword, argon2id.DefaultParams)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to hash password")
+	}
+
+	// Document to insert
+	doc := form.RegisterForm{
+		ID:           primitive.NewObjectID(),
+		Email:        email,
+		Password:     hashedPassword,
+		PasswordSalt: string(salt),
+	}
+
+	coll.InsertOne(context.TODO(), doc)
+
+	return "", nil
+}
 
 // AddUser
 func (u UserModel) AddUser(name string,
@@ -48,7 +85,7 @@ func (u UserModel) AddUser(name string,
 		return "", errors.Wrap(err, "failed to insert document")
 	}
 
-	id := fmt.Sprint(result.InsertedID)
+	id := result.InsertedID.(primitive.ObjectID).Hex()
 
 	return id, nil
 }
@@ -72,6 +109,7 @@ func (u UserModel) GetUsers() ([]form.User, error) {
 	}
 	return results, nil
 }
+
 //GetUserByID
 func (u UserModel) GetUserByID(id primitive.ObjectID) (form.User, error) {
 	coll, err := database.GetDB()
@@ -104,49 +142,49 @@ func (u UserModel) UpdateUser(id primitive.ObjectID,
 	//Document
 	doc := form.UserUpdate{
 		Name:        name,
-		Email:		 email,
+		Email:       email,
 		TelNo:       telNo,
 		Address:     address,
 		DateOfBirth: primitive.NewDateTimeFromTime(dt),
 		Gender:      gender,
 	}
-	update := bson.D{{"$set",doc}}
-	if _ , err := coll.UpdateByID(context.TODO(),id,update); err != nil {
+	update := bson.D{{"$set", doc}}
+	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 		return "", errors.Wrap(err, "failed to update document")
 	}
 
-	return "update success",nil
+	return "update success", nil
 }
 
 //UpdatePassword
 func (u UserModel) UpdatePassword(id primitive.ObjectID,
-	ps string) (string,error){
+	ps string) (string, error) {
 
 	coll, err := database.GetDB()
 	if err != nil {
 		return "", err
 	}
-	doc:= form.PasswordUpdate{
+	doc := form.PasswordUpdate{
 		Password: ps,
 	}
-	update := bson.D{{"$set",doc}}
-	if _ , err := coll.UpdateByID(context.TODO(),id,update); err != nil {
+	update := bson.D{{"$set", doc}}
+	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 		return "", errors.Wrap(err, "failed to update document")
 	}
-	return "update password success",nil
+	return "update password success", nil
 }
 
 //delete
-func (u UserModel) DeleteUser(id primitive.ObjectID) (string, error){
+func (u UserModel) DeleteUser(id primitive.ObjectID) (string, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return "", err
 	}
 
-	filter := bson.D{{"_id",id}}
+	filter := bson.M{"_id":id}
 
-	if _ ,err := coll.DeleteOne(context.TODO(),filter); err != nil{
+	if _, err := coll.DeleteOne(context.TODO(), filter); err != nil {
 		return "", errors.Wrap(err, "failed to delete document")
 	}
-	return "delete success",nil
+	return "delete success", nil
 }

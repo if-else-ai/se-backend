@@ -29,18 +29,10 @@ services:
       - mongodb
     environment:
       - MONGO_URI=mongodb://root:root@139.59.219.217:27017
+    volumes:
+      - /opt/files:/opt/files
     ports:
       - 5102:5000
-      
-  kibby-product-cart:
-    build: ./backend/services/product-cart
-    restart: always
-    depends_on:
-      - mongodb
-    environment:
-      - MONGO_URI=mongodb://root:root@139.59.219.217:27017
-    ports:
-      - 5103:5000
 
   kibby-order:
     build: ./backend/services/order
@@ -66,3 +58,4 @@ services:
 
 volumes:
   data: {}
+  files: {}
