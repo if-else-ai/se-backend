@@ -80,15 +80,23 @@ func (oc OrderController) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	res, err := md.CreatOrder(req.Status,
+	userId, err := primitive.ObjectIDFromHex(req.UserID)
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	res, err := md.CreatOrder(userId,
+		req.Status,
 		req.Address,
 		req.Detail,
 		req.UserDetail,
-		req.TrackingNumber,)
+		req.TrackingNumber)
 	if err != nil {
 		panic(err)
 	}
-	c.JSON(http.StatusOK, gin.H{"id": res})
+
+	c.JSON(http.StatusOK, res)
 	return
 }
 
@@ -102,8 +110,8 @@ func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context) {
 		return
 	}
 
-	res,err := md.UpdateOrderStatusAndTracking(req.ID,
-		req.Status,req.Address,req.Detail,req.UserDetail,req.TrackingNumber,
+	res, err := md.UpdateOrderStatusAndTracking(req.ID,
+		req.Status, req.Address, req.Detail, req.UserDetail, req.TrackingNumber,
 	)
 	if err != nil {
 		panic(err)
@@ -116,7 +124,7 @@ func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context) {
 
 //Delete
 func (oc OrderController) DeleteOrder(c *gin.Context) {
-	
+
 	var md models.OrderModel
 
 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
