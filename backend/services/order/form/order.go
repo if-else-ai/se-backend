@@ -27,6 +27,7 @@ type Product struct {
 	Price     float32            `json:"price" bson:"price"`
 	Quantity  int32              `json:"quantity" bson:"quantity"`
 	Option    []ProductOption    `json:"option" bson:"option"`
+	Image     []string           `json:"image" bson:"image"`
 }
 
 type ProductOption struct {
