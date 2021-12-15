@@ -68,3 +68,18 @@ type UpdateOrderStatusFrom struct {
 	PaymentID      string             `json:"paymentId" bson:"paymentId"`
 	TrackingNumber string             `json:"trackingNumber" bson:"trackingNumber"`
 }
+
+type ProductUpdate struct {
+	ProductId primitive.ObjectID    `json:"productId" bson:"productId"`
+	Name      string                `json:"name" bson:"name"`
+	Price     float32               `json:"price" bson:"price"`
+	Quantity  int32                 `json:"quantity" bson:"quantity"`
+	Option    []ProductOptionUpdate `json:"option" bson:"option"`
+	Image     []string              `json:"image" bson:"image"`
+}
+
+type ProductOptionUpdate struct {
+	Name       string    `json:"name" bson:"name"`
+	Select     string    `json:"select" bson:"select"`
+	PriceAdded []float32 `json:"priceAdded" bson:"priceAdded"`
+}
