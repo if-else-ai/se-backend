@@ -51,15 +51,9 @@ package controllers
 // 	return
 // }
 
-<<<<<<< HEAD
-//GetUsersByID
-func (ac AdminController) GetAdminByID(c *gin.Context) {
-	var md models.AdminModel
-=======
 // //GetUsersByID
 // func (a AdminController) GetAdminByID(c *gin.Context) {
 // 	var md models.AdminModel
->>>>>>> dfc9e7e88dcf6ca3985618e7c1ce93df2bf79af0
 
 // 	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 // 	if err != nil {
