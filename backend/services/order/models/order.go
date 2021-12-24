@@ -10,12 +10,15 @@ import (
 	"math"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/omise/omise-go"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type OrderModel struct{}
@@ -190,7 +193,38 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 		if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"detail.payment", payment}}}}); err != nil {
 			return "", errors.Wrap(err, "failed to update status")
 		}
+<<<<<<< HEAD
 		
+=======
+
+		var order form.Order
+		if err := coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&order); err != nil {
+			return "", errors.Wrap(err, "failed to get order")
+		}
+
+		client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(os.Getenv("MONGO_URI")))
+		if err != nil {
+			return "", errors.Wrap(err, "failed to connect to mongo")
+		}
+		// Check the connection
+		if err := client.Ping(context.TODO(), nil); err != nil {
+			return "", errors.Wrap(err, "failed to ping mongo")
+		}
+		collProduct := client.Database("kibby").Collection("product")
+
+		for _, product := range order.Detail.Product {
+			var prod form.ProductUpdate
+			if err := collProduct.FindOne(context.TODO(), bson.M{"_id": product.ProductId}).Decode(&prod); err != nil {
+				return "", errors.Wrap(err, "failed to get product")
+			}
+
+			fmt.Printf("%v %v", prod.Quantity, product.Quantity)
+
+			if _, err := collProduct.UpdateByID(context.TODO(), product.ProductId, bson.D{{"$set", bson.D{{"quantity", prod.Quantity - product.Quantity}}}}); err != nil {
+				return "", errors.Wrap(err, "failed to update status")
+			}
+		}
+>>>>>>> 0c9fea3f10ff7ce10fa1dce9ea1715ce8ffb98b0
 	}
 
 	// update := bson.D{
