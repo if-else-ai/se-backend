@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/omise/omise-go"
 	"github.com/pkg/errors"
@@ -85,7 +86,8 @@ func (o OrderModel) CreatOrder(userId primitive.ObjectID,
 	address string,
 	detail form.OrderDetail,
 	userDetail form.UserDetail,
-	trackingNumber string) (form.CreateOrderResponse, error) {
+	trackingNumber string,
+	shipStatus string) (form.CreateOrderResponse, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return form.CreateOrderResponse{}, err
@@ -120,6 +122,8 @@ func (o OrderModel) CreatOrder(userId primitive.ObjectID,
 		return form.CreateOrderResponse{}, errors.Wrap(err, "failed to unmarshal omise response")
 	}
 
+	ts := time.Now()
+
 	// Document to insert
 	doc := form.CreateOrderForm{
 		ID:      primitive.NewObjectID(),
@@ -133,6 +137,7 @@ func (o OrderModel) CreatOrder(userId primitive.ObjectID,
 		},
 		UserDetail:     userDetail,
 		TrackingNumber: trackingNumber,
+		CreateDate:     primitive.NewDateTimeFromTime(ts),
 	}
 
 	result, err := coll.InsertOne(context.TODO(), doc)
@@ -152,21 +157,30 @@ func (o OrderModel) CreatOrder(userId primitive.ObjectID,
 func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 	status string,
 	paymentID string,
+	shipStatus string,
 	trackingNumber string) (string, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return "", err
 	}
 
-	// Document to update
+	// // Document to update
 	// doc := form.OrderUpdate{
-	// 	Status: status,
+	// 	ShipStatus: shipStatus,
+	// 	TrackingNumber: trackingNumber,
 	// }
 
 	if status == "Shipping" {
-		if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"trackingNumber", trackingNumber}}}}); err != nil {
-			return "", errors.Wrap(err, "failed to update status")
+
+		if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"shipStatus", shipStatus}}}}); err != nil {
+			return "", errors.Wrap(err, "failed to update Shipstatus")
 		}
+		if trackingNumber != "" {
+			if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"trackingNumber", trackingNumber}}}}); err != nil {
+				return "", errors.Wrap(err, "failed to update status")
+			}
+		}
+
 	} else if status == "Paid" {
 		req, err := http.NewRequest("POST", "https://api.omise.co/charges/"+paymentID+"/mark_as_paid", nil)
 		if err != nil {
@@ -193,9 +207,6 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 		if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"detail.payment", payment}}}}); err != nil {
 			return "", errors.Wrap(err, "failed to update status")
 		}
-<<<<<<< HEAD
-		
-=======
 
 		var order form.Order
 		if err := coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&order); err != nil {
@@ -224,7 +235,11 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 				return "", errors.Wrap(err, "failed to update status")
 			}
 		}
->>>>>>> 0c9fea3f10ff7ce10fa1dce9ea1715ce8ffb98b0
+	} else if status == "Completed" {
+		if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"shipStatus", "4"}}}}); err != nil {
+			return "", errors.Wrap(err, "failed to update status")
+
+		}
 	}
 
 	// update := bson.D{
@@ -236,6 +251,16 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 	if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"status", status}}}}); err != nil {
 		return "", errors.Wrap(err, "failed to update status")
 	}
+
+	// ts := time.Now()
+	// if _, err := coll.UpdateByID(context.TODO(), id,bson.M{"$addToSet":bson.D{{"$set", bson.D{{"UpdateDate", ts}}}}}); err != nil {
+	// 	return "", errors.Wrap(err, "failed to update status") 
+	// }
+	if _, err := coll.UpdateByID(context.TODO(), id,bson.D{{"$push", bson.D{{"updateDate",time.Now()}}}}); err != nil {
+		return "", errors.Wrap(err, "failed to update Date") 
+	}
+
+
 
 	return "update success", nil
 }

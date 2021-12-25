@@ -91,7 +91,8 @@ func (oc OrderController) CreateOrder(c *gin.Context) {
 		req.Address,
 		req.Detail,
 		req.UserDetail,
-		req.TrackingNumber)
+		req.TrackingNumber,
+		req.ShipStatus)
 	if err != nil {
 		panic(err)
 	}
@@ -113,7 +114,9 @@ func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context) {
 	res, err := md.UpdateOrderStatusAndTracking(req.ID,
 		req.Status,
 		req.PaymentID,
+		req.ShipStatus,
 		req.TrackingNumber,
+		
 	)
 	if err != nil {
 		panic(err)

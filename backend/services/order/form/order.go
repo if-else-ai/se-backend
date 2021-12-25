@@ -6,13 +6,16 @@ import (
 )
 
 type Order struct {
-	ID             primitive.ObjectID `json:"id" bson:"_id"`
-	UserID         string             `json:"userId" bson:"userId"`
-	Status         string             `json:"status" bson:"status"`
-	Address        string             `json:"address" bson:"address"`
-	Detail         OrderDetail        `json:"detail" bson:"detail"`
-	UserDetail     UserDetail         `json:"userDetail" bson:"userDetail"`
-	TrackingNumber string             `json:"trackingNumber" bson:"trackingNumber"`
+	ID             primitive.ObjectID   `json:"id" bson:"_id"`
+	UserID         string               `json:"userId" bson:"userId"`
+	Status         string               `json:"status" bson:"status"`
+	Address        string               `json:"address" bson:"address"`
+	Detail         OrderDetail          `json:"detail" bson:"detail"`
+	UserDetail     UserDetail           `json:"userDetail" bson:"userDetail"`
+	ShipStatus     string               `json:"shipStatus" bson:"shipStatus"`
+	TrackingNumber string               `json:"trackingNumber" bson:"trackingNumber"`
+	CreateDate     primitive.DateTime   `json:"createDate" bson:"createDate"`
+	UpdateDate     []primitive.DateTime `json:"updateDate" bson:"updateDate"`
 }
 
 type OrderDetail struct {
@@ -44,6 +47,7 @@ type UserDetail struct {
 
 type OrderUpdate struct {
 	Status         string `json:"status" bson:"status"`
+	ShipStatus     string `json:"Shipstatus" bson:"Shipstatus"`
 	TrackingNumber string `json:"trackingNumber" bson:"trackingNumber"`
 }
 
@@ -55,6 +59,7 @@ type CreateOrderForm struct {
 	Detail         OrderDetail        `json:"detail" bson:"detail"`
 	UserDetail     UserDetail         `json:"userDetail" bson:"userDetail"`
 	TrackingNumber string             `json:"trackingNumber" bson:"trackingNumber"`
+	CreateDate     primitive.DateTime `json:"createDate" bson:"createDate"`
 }
 
 type CreateOrderResponse struct {
@@ -63,10 +68,12 @@ type CreateOrderResponse struct {
 }
 
 type UpdateOrderStatusFrom struct {
-	ID             primitive.ObjectID `json:"id" bson:"_id"`
-	Status         string             `json:"status" bson:"status"`
-	PaymentID      string             `json:"paymentId" bson:"paymentId"`
-	TrackingNumber string             `json:"trackingNumber" bson:"trackingNumber"`
+	ID             primitive.ObjectID   `json:"id" bson:"_id"`
+	Status         string               `json:"status" bson:"status"`
+	PaymentID      string               `json:"paymentId" bson:"paymentId"`
+	ShipStatus     string               `json:"shipstatus" bson:"shipstatus"`
+	TrackingNumber string               `json:"trackingNumber" bson:"trackingNumber"`
+	UpdateDate     []primitive.DateTime `json:"updateDate" bson:"updateDate"`
 }
 
 type ProductUpdate struct {
