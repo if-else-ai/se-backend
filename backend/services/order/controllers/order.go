@@ -6,6 +6,7 @@ import (
 	"kibby/order/form"
 	"kibby/order/models"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -115,9 +116,7 @@ func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context) {
 		req.Status,
 		req.PaymentID,
 		req.ShipStatus,
-		req.TrackingNumber,
-		
-	)
+		req.TrackingNumber)
 	if err != nil {
 		panic(err)
 		return
@@ -158,5 +157,31 @@ func (oc OrderController) DeleteAllOrders(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "delete all orders"})
+	return
+}
+
+// GetReport
+func (oc OrderController) GetReport(c *gin.Context) {
+	var req struct {
+		StartDate string `form:"startDate"`
+		EndDate   string `form:"endDate"`
+	}
+	var md models.OrderModel
+
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	startDate, _ := time.Parse("2006-01-02", req.StartDate)
+	endDate, _ := time.Parse("2006-01-02", req.EndDate)
+
+	res, err := md.GetReport(primitive.NewDateTimeFromTime(startDate), primitive.NewDateTimeFromTime(endDate))
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 	return
 }

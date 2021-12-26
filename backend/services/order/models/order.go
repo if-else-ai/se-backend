@@ -163,19 +163,13 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 		return "", err
 	}
 
-	// if status == "Shipping" {
-	// 	update := bson.D{{"$set", bson.D{{"trackingNumber", trackingNumber}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
-
-	// 	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
-	// 		return "", errors.Wrap(err, "failed to update status")
-
 	if status == "Shipping" {
-		update := bson.D{{"$set", bson.D{{"shipStatus", shipStatus}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
+		update := bson.D{{"$set", bson.D{{"shipStatus", shipStatus}}}}
 		if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 			return "", errors.Wrap(err, "failed to update Shipstatus")
 		}
 		if trackingNumber != "" {
-			update := bson.D{{"$set", bson.D{{"trackingNumber", trackingNumber}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
+			update := bson.D{{"$set", bson.D{{"trackingNumber", trackingNumber}}}}
 			if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 				return "", errors.Wrap(err, "failed to update status")
 			}
@@ -204,7 +198,7 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 			return "", errors.Wrap(err, "failed to unmarshal omise response")
 		}
 
-		update := bson.D{{"$set", bson.D{{"detail.payment", payment}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
+		update := bson.D{{"$set", bson.D{{"detail.payment", payment}}}}
 
 		if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 			return "", errors.Wrap(err, "failed to update status")
@@ -234,14 +228,16 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 			fmt.Printf("%v %v", prod.Quantity, product.Quantity)
 
 			update := bson.D{{"$set", bson.D{{"quantity", prod.Quantity - product.Quantity},
-				{"soldQuantity", prod.SoldQuantity + product.Quantity}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
+				{"soldQuantity", prod.SoldQuantity + product.Quantity}}}}
 
 			if _, err := collProduct.UpdateByID(context.TODO(), product.ProductId, update); err != nil {
 				return "", errors.Wrap(err, "failed to update status")
 			}
 		}
 	} else if status == "Completed" {
-		if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"shipStatus", "4"}}}}); err != nil {
+		update := bson.D{{"$set", bson.D{{"shipStatus", "Completed"}}}}
+
+		if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 			return "", errors.Wrap(err, "failed to update status")
 
 		}
@@ -251,14 +247,6 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 
 	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 		return "", errors.Wrap(err, "failed to update status")
-	}
-
-	// ts := time.Now()
-	// if _, err := coll.UpdateByID(context.TODO(), id,bson.M{"$addToSet":bson.D{{"$set", bson.D{{"UpdateDate", ts}}}}}); err != nil {
-	// 	return "", errors.Wrap(err, "failed to update status")
-	// }
-	if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$push", bson.D{{"updateDate", time.Now()}}}}); err != nil {
-		return "", errors.Wrap(err, "failed to update Date")
 	}
 
 	return "update success", nil
@@ -292,4 +280,36 @@ func (o OrderModel) DeleteAllOrders() error {
 	}
 
 	return nil
+}
+
+// GetReport
+func (o OrderModel) GetReport(startDate primitive.DateTime, endDate primitive.DateTime) (form.Report, error) {
+	coll, err := database.GetDB()
+	if err != nil {
+		return form.Report{}, err
+	}
+
+	filter := bson.M{"status": "Completed", "createDate": bson.M{"$gte": startDate, "$lte": endDate}}
+	option := options.Find().SetSort(bson.D{{"createDate", -1}})
+
+	cursor, err := coll.Find(context.TODO(), filter, option)
+	if err != nil {
+		return form.Report{}, errors.Wrap(err, "failed to get orders")
+	}
+
+	var orders []form.Order
+	if err := cursor.All(context.TODO(), &orders); err != nil {
+		return form.Report{}, errors.Wrap(err, "failed to get orders")
+	}
+
+	var totalPrice float32
+	for _, order := range orders {
+		totalPrice += order.Detail.TotalPrice
+	}
+
+	return form.Report{
+		Orders:      orders,
+		TotalOrders: len(orders),
+		TotalPrice:  totalPrice,
+	}, nil
 }

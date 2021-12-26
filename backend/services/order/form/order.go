@@ -69,12 +69,11 @@ type CreateOrderResponse struct {
 }
 
 type UpdateOrderStatusFrom struct {
-	ID             primitive.ObjectID   `json:"id" bson:"_id"`
-	Status         string               `json:"status" bson:"status"`
-	PaymentID      string               `json:"paymentId" bson:"paymentId"`
-	ShipStatus     string               `json:"shipstatus" bson:"shipstatus"`
-	TrackingNumber string               `json:"trackingNumber" bson:"trackingNumber"`
-	UpdateDate     []primitive.DateTime `json:"updateDate" bson:"updateDate"`
+	ID             primitive.ObjectID `json:"id" bson:"_id"`
+	Status         string             `json:"status" bson:"status"`
+	PaymentID      string             `json:"paymentId" bson:"paymentId"`
+	ShipStatus     string             `json:"shipstatus" bson:"shipstatus"`
+	TrackingNumber string             `json:"trackingNumber" bson:"trackingNumber"`
 }
 
 type ProductUpdate struct {
@@ -91,4 +90,10 @@ type ProductOptionUpdate struct {
 	Name       string    `json:"name" bson:"name"`
 	Select     string    `json:"select" bson:"select"`
 	PriceAdded []float32 `json:"priceAdded" bson:"priceAdded"`
+}
+
+type Report struct {
+	Orders      []Order `json:"orders"`
+	TotalOrders int     `json:"totalOrders"`
+	TotalPrice  float32 `json:"totalPrice"`
 }
