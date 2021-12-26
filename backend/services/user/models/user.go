@@ -40,7 +40,6 @@ func (u UserModel) Register(email string, password string) (form.RegisterRespons
 
 	// Hash password
 	saltedPassword := password + string(salt)
-	// hashedPassword, err := argon2id.CreateHash(saltedPassword, argon2id.DefaultParams)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), 10)
 	if err != nil {
 		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to hash password")
@@ -199,22 +198,51 @@ func (u UserModel) UpdateUser(id primitive.ObjectID,
 	return "update success", nil
 }
 
-//UpdatePassword
+// UpdatePassword
 func (u UserModel) UpdatePassword(id primitive.ObjectID,
-	ps string) (string, error) {
+	oldPassword string, newPassword string) (string, int, error) {
 
 	coll, err := database.GetDB()
 	if err != nil {
-		return "", err
+		return "", http.StatusInternalServerError, err
 	}
-	doc := form.PasswordUpdate{
-		Password: ps,
+
+	var passwordUpdateForm form.PasswordUpdateForm
+	if err := coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&passwordUpdateForm); err != nil {
+		return "", http.StatusInternalServerError, errors.Wrap(err, "failed to get password update form")
+	}
+
+	// Compare password
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordUpdateForm.Password),
+		[]byte(oldPassword+string(passwordUpdateForm.PasswordSalt))); err != nil {
+		return "", http.StatusUnauthorized, errors.Wrap(err, "wrong password")
+	}
+
+	// Generate password salt
+	salt := make([]byte, 64)
+	_, err = io.ReadFull(rand.Reader, salt)
+	if err != nil {
+		return "", http.StatusInternalServerError, errors.Wrap(err, "failed to generate password salt")
+	}
+
+	// Hash password
+	saltedPassword := newPassword + string(salt)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), 10)
+	if err != nil {
+		return "", http.StatusInternalServerError, errors.Wrap(err, "failed to hash password")
+	}
+
+	doc := form.PasswordUpdateForm{
+		Password:     string(hashedPassword),
+		PasswordSalt: salt,
 	}
 	update := bson.D{{"$set", doc}}
+
 	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
-		return "", errors.Wrap(err, "failed to update document")
+		return "", http.StatusInternalServerError, errors.Wrap(err, "failed to update document")
 	}
-	return "update password success", nil
+
+	return "update password success", http.StatusOK, nil
 }
 
 //delete

@@ -141,24 +141,30 @@ func (uc UserController) UpdateUser(c *gin.Context) {
 
 }
 
-//UpdatePassword
+// UpdatePassword
 func (us UserController) UpdatePassword(c *gin.Context) {
-	var req form.User
+	var req form.PasswordUpdateRequestForm
 	var md models.UserModel
 
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
-	res, err := md.UpdatePassword(req.ID, req.Password)
 
+	id, err := primitive.ObjectIDFromHex(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		panic(err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": res})
-	return
 
+	res, statusCode, err := md.UpdatePassword(id, req.OldPassword, req.NewPassword)
+	if err != nil {
+		c.AbortWithStatusJSON(statusCode, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(statusCode, gin.H{"message": res})
+	return
 }
 
 //DeleteUser

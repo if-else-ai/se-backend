@@ -1,6 +1,8 @@
 package server
 
 import (
+	"kibby/admin/controllers"
+
 	"net/http"
 
 	"github.com/gin-contrib/cors"
@@ -12,7 +14,7 @@ func NewRouter() *gin.Engine {
 	router := gin.Default()
 	router.Use(cors.Default())
 
-	// var adminController controllers.AdminController
+	var adminController controllers.AdminController
 
 	router.GET("/ping", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
@@ -20,12 +22,13 @@ func NewRouter() *gin.Engine {
 		})
 	})
 
-	// router.POST("/admin", adminController.AddAdmin)
-	// router.GET("/admins", adminController.GetAdmins)
-	// router.GET("/admin/:id", adminController.GetAdminByID)
-	// router.PUT("/admin", adminController.UpdateAdmin)
-	// router.PUT("/adminP", adminController.UpdatePassword)
-	// router.DELETE("/admin", adminController.DeleteAdmin)
+	router.POST("/login", adminController.Login)
+	router.POST("/admin", adminController.AddAdmin)
+	router.GET("/admin", adminController.GetAllAdmin)
+	router.GET("/admin/:id", adminController.GetAdminByID)
+	router.PUT("/admin/:id", adminController.UpdateAdmin)
+	router.PUT("/admin/:id/password", adminController.UpdatePassword)
+	router.DELETE("/admin/:id", adminController.DeleteAdmin)
 
 	return router
 }

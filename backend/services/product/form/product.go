@@ -5,15 +5,16 @@ import (
 )
 
 type Product struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id"`
-	Name        string             `json:"name" bson:"name"`
-	Category    string             `json:"category" bson:"category"`
-	Price       float32            `json:"price" bson:"price"`
-	Description string             `json:"description" bson:"description"`
-	Quantity    int32              `json:"quantity" bson:"quantity"`
-	Option      []ProductOption    `json:"option" bson:"option"`
-	Image       []string           `json:"image" bson:"image"`
-	Tag         []string           `json:"tag" bson:"tag"`
+	ID           primitive.ObjectID `json:"id" bson:"_id"`
+	Name         string             `json:"name" bson:"name"`
+	Category     string             `json:"category" bson:"category"`
+	Price        float32            `json:"price" bson:"price"`
+	Description  string             `json:"description" bson:"description"`
+	Quantity     int32              `json:"quantity" bson:"quantity"`
+	Option       []ProductOption    `json:"option" bson:"option"`
+	Image        []string           `json:"image" bson:"image"`
+	Tag          []string           `json:"tag" bson:"tag"`
+	SoldQuantity int32              `json:"soldQuantity" bson:"soldQuantity"`
 }
 
 type ProductOption struct {

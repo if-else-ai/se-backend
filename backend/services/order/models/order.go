@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/omise/omise-go"
 	"github.com/pkg/errors"
@@ -23,7 +24,7 @@ import (
 
 type OrderModel struct{}
 
-//GetOrder
+// GetOrder
 func (o OrderModel) GetOrder() ([]form.Order, error) {
 	coll, err := database.GetDB()
 	if err != nil {
@@ -43,7 +44,7 @@ func (o OrderModel) GetOrder() ([]form.Order, error) {
 	return results, nil
 }
 
-//GetOrderByUserId
+// GetOrderByUserId
 func (o OrderModel) GetOrderByUserId(userId primitive.ObjectID) ([]form.Order, error) {
 	coll, err := database.GetDB()
 	if err != nil {
@@ -64,7 +65,7 @@ func (o OrderModel) GetOrderByUserId(userId primitive.ObjectID) ([]form.Order, e
 
 }
 
-//GetOrderById
+// GetOrderById
 func (o OrderModel) GetOrderById(id primitive.ObjectID) (form.Order, error) {
 	coll, err := database.GetDB()
 	if err != nil {
@@ -133,6 +134,8 @@ func (o OrderModel) CreatOrder(userId primitive.ObjectID,
 		},
 		UserDetail:     userDetail,
 		TrackingNumber: trackingNumber,
+		CreateDate:     primitive.NewDateTimeFromTime(time.Now()),
+		UpdateDate:     []primitive.DateTime{primitive.NewDateTimeFromTime(time.Now())},
 	}
 
 	result, err := coll.InsertOne(context.TODO(), doc)
@@ -158,13 +161,10 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 		return "", err
 	}
 
-	// Document to update
-	// doc := form.OrderUpdate{
-	// 	Status: status,
-	// }
-
 	if status == "Shipping" {
-		if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"trackingNumber", trackingNumber}}}}); err != nil {
+		update := bson.D{{"$set", bson.D{{"trackingNumber", trackingNumber}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
+
+		if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 			return "", errors.Wrap(err, "failed to update status")
 		}
 	} else if status == "Paid" {
@@ -190,7 +190,9 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 			return "", errors.Wrap(err, "failed to unmarshal omise response")
 		}
 
-		if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"detail.payment", payment}}}}); err != nil {
+		update := bson.D{{"$set", bson.D{{"detail.payment", payment}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
+
+		if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 			return "", errors.Wrap(err, "failed to update status")
 		}
 
@@ -217,27 +219,26 @@ func (o OrderModel) UpdateOrderStatusAndTracking(id primitive.ObjectID,
 
 			fmt.Printf("%v %v", prod.Quantity, product.Quantity)
 
-			if _, err := collProduct.UpdateByID(context.TODO(), product.ProductId, bson.D{{"$set", bson.D{{"quantity", prod.Quantity - product.Quantity}}}}); err != nil {
+			update := bson.D{{"$set", bson.D{{"quantity", prod.Quantity - product.Quantity},
+				{"soldQuantity", prod.SoldQuantity + product.Quantity}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
+
+			if _, err := collProduct.UpdateByID(context.TODO(), product.ProductId, update); err != nil {
 				return "", errors.Wrap(err, "failed to update status")
 			}
 		}
 	}
 
-	// update := bson.D{
-	// 	{"$set", bson.D{
-	// 		{"status", status},
+	update := bson.D{{"$set", bson.D{{"status", status}}}, {"$push", bson.D{{"updateDate", primitive.NewDateTimeFromTime(time.Now())}}}}
 
-	// 	}}
-	// }
-	if _, err := coll.UpdateByID(context.TODO(), id, bson.D{{"$set", bson.D{{"status", status}}}}); err != nil {
+	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 		return "", errors.Wrap(err, "failed to update status")
 	}
 
 	return "update success", nil
 }
 
-//deleteOrder
-func (o OrderModel) DeleteOrder(id primitive.ObjectID) (string, error) {
+// DeleteOrderByID
+func (o OrderModel) DeleteOrderByID(id primitive.ObjectID) (string, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return "", err
@@ -248,6 +249,20 @@ func (o OrderModel) DeleteOrder(id primitive.ObjectID) (string, error) {
 	if _, err := coll.DeleteOne(context.TODO(), filter); err != nil {
 		return "", errors.Wrap(err, "failed to delete document")
 	}
-	return "delete success", nil
 
+	return "delete success", nil
+}
+
+// DeleteAllOrders
+func (o OrderModel) DeleteAllOrders() error {
+	coll, err := database.GetDB()
+	if err != nil {
+		return err
+	}
+
+	if _, err := coll.DeleteMany(context.TODO(), bson.M{}); err != nil {
+		return errors.Wrap(err, "failed to delete documents")
+	}
+
+	return nil
 }

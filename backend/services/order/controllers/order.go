@@ -124,8 +124,8 @@ func (oc OrderController) UpdateOrderStatusAndTracking(c *gin.Context) {
 
 }
 
-//Delete
-func (oc OrderController) DeleteOrder(c *gin.Context) {
+// DeleteOrderByID
+func (oc OrderController) DeleteOrderByID(c *gin.Context) {
 
 	var md models.OrderModel
 
@@ -135,7 +135,7 @@ func (oc OrderController) DeleteOrder(c *gin.Context) {
 		return
 	}
 
-	res, err := md.DeleteOrder(id)
+	res, err := md.DeleteOrderByID(id)
 	if err != nil {
 		panic(err)
 		return
@@ -143,4 +143,17 @@ func (oc OrderController) DeleteOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": res})
 	return
 
+}
+
+// DeleteAllOrders
+func (oc OrderController) DeleteAllOrders(c *gin.Context) {
+	var md models.OrderModel
+
+	if err := md.DeleteAllOrders(); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "delete all orders"})
+	return
 }

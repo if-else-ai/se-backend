@@ -48,6 +48,13 @@ type UserUpdate struct {
 	DateOfBirth primitive.DateTime `json:"dateOfBirth" bson:"dateOfBirth"`
 	Gender      string             `json:"gender" bson:"gender"`
 }
-type PasswordUpdate struct {
-	Password string `json:"password" bson:"password"`
+
+type PasswordUpdateForm struct {
+	Password     string `json:"password" bson:"password"`
+	PasswordSalt []byte `json:"passwordSalt" bson:"passwordSalt"`
+}
+
+type PasswordUpdateRequestForm struct {
+	OldPassword string `json:"oldPassword" bson:"oldPassword"`
+	NewPassword string `json:"newPassword" bson:"newPassword"`
 }

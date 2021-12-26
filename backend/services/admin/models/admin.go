@@ -1,59 +1,148 @@
 package models
 
 import (
-	"context"
-	"fmt"
 	"kibby/admin/database"
 	"kibby/admin/form"
+
+	"context"
+	"crypto/rand"
+	"io"
+	"net/http"
 	"time"
 
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AdminModel struct{}
 
-// AddAdmin
-func (a AdminModel) AddAdmin(name string,
-	email string,
-	password string,
-	telNo string,
-	address string,
-	dateOfBirth string,
-	gender string) (string, error) {
-
+// Register
+func (a AdminModel) Register(email string, password string) (form.RegisterResponseForm, int, error) {
 	coll, err := database.GetDB()
 	if err != nil {
-		return "", err
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, err
 	}
 
-	dt, _ := time.Parse("2006-01-02", dateOfBirth)
-
-	// Document
-	doc := form.Admin{
-		ID:          primitive.NewObjectID(),
-		Name:        name,
-		Email:       email,
-		Password:    password,
-		TelNo:       telNo,
-		Address:     address,
-		DateOfBirth: primitive.NewDateTimeFromTime(dt),
-		Gender:      gender,
+	// Check if email already exists
+	findEmailRes := coll.FindOne(context.TODO(), bson.M{"email": email})
+	if findEmailRes.Err() == nil {
+		return form.RegisterResponseForm{}, http.StatusBadRequest, errors.New("email already exists")
 	}
 
-	result, err := coll.InsertOne(context.TODO(), doc)
+	// Generate password salt
+	salt := make([]byte, 64)
+	_, err = io.ReadFull(rand.Reader, salt)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to insert document")
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to generate password salt")
 	}
 
-	id := fmt.Sprint(result.InsertedID)
+	// Hash password
+	saltedPassword := password + string(salt)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), 10)
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to hash password")
+	}
 
-	return id, nil
+	// Document to insert
+	doc := form.RegisterForm{
+		ID:           primitive.NewObjectID(),
+		Email:        email,
+		Password:     string(hashedPassword),
+		PasswordSalt: salt,
+	}
+
+	res, err := coll.InsertOne(context.TODO(), doc)
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to insert document")
+	}
+
+	id := res.InsertedID.(primitive.ObjectID).Hex()
+
+	return form.RegisterResponseForm{
+		ID: id,
+	}, http.StatusOK, nil
 }
 
-// GetAdnins
-func (a AdminModel) GetAdmins() ([]form.Admin, error) {
+// Login
+func (a AdminModel) Login(email string, password string) (form.LoginResponseForm, int, error) {
+	coll, err := database.GetDB()
+	if err != nil {
+		return form.LoginResponseForm{}, http.StatusInternalServerError, err
+	}
+
+	FindEmailRes := coll.FindOne(context.TODO(), bson.M{"email": email})
+	if FindEmailRes.Err() != nil {
+		return form.LoginResponseForm{}, http.StatusBadRequest, errors.New("email not found")
+	}
+
+	var user form.LoginResultForm
+	if err := FindEmailRes.Decode(&user); err != nil {
+		return form.LoginResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to decode document")
+	}
+
+	// Check if password is correct
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password+string(user.PasswordSalt))); err != nil {
+		return form.LoginResponseForm{}, http.StatusUnauthorized, errors.New("password is incorrect")
+	}
+
+	id := user.ID.Hex()
+
+	return form.LoginResponseForm{
+		ID: id,
+	}, http.StatusOK, nil
+}
+
+// AddAdmin
+func (a AdminModel) AddAdmin(email string, password string) (form.RegisterResponseForm, int, error) {
+	coll, err := database.GetDB()
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, err
+	}
+
+	// Check if email already exists
+	findEmailRes := coll.FindOne(context.TODO(), bson.M{"email": email})
+	if findEmailRes.Err() == nil {
+		return form.RegisterResponseForm{}, http.StatusBadRequest, errors.New("email already exists")
+	}
+
+	// Generate password salt
+	salt := make([]byte, 64)
+	_, err = io.ReadFull(rand.Reader, salt)
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to generate password salt")
+	}
+
+	// Hash password
+	saltedPassword := password + string(salt)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), 10)
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to hash password")
+	}
+
+	// Document to insert
+	doc := form.RegisterForm{
+		ID:           primitive.NewObjectID(),
+		Email:        email,
+		Password:     string(hashedPassword),
+		PasswordSalt: salt,
+	}
+
+	res, err := coll.InsertOne(context.TODO(), doc)
+	if err != nil {
+		return form.RegisterResponseForm{}, http.StatusInternalServerError, errors.Wrap(err, "failed to insert document")
+	}
+
+	id := res.InsertedID.(primitive.ObjectID).Hex()
+
+	return form.RegisterResponseForm{
+		ID: id,
+	}, http.StatusOK, nil
+}
+
+// GetAllAdmin
+func (a AdminModel) GetAllAdmin() ([]form.Admin, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return []form.Admin{}, err
@@ -71,6 +160,7 @@ func (a AdminModel) GetAdmins() ([]form.Admin, error) {
 	}
 	return results, nil
 }
+
 //GetAdminByID
 func (a AdminModel) GetAdminByID(id primitive.ObjectID) (form.Admin, error) {
 	coll, err := database.GetDB()
@@ -103,49 +193,78 @@ func (a AdminModel) UpdateAdmin(id primitive.ObjectID,
 	//Document
 	doc := form.AdminUpdate{
 		Name:        name,
-		Email:		 email,
+		Email:       email,
 		TelNo:       telNo,
 		Address:     address,
 		DateOfBirth: primitive.NewDateTimeFromTime(dt),
 		Gender:      gender,
 	}
-	update := bson.D{{"$set",doc}}
-	if _ , err := coll.UpdateByID(context.TODO(),id,update); err != nil {
+	update := bson.D{{"$set", doc}}
+	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
 		return "", errors.Wrap(err, "failed to update document")
 	}
 
-	return "update success",nil
+	return "update success", nil
 }
 
-//UpdatePassword
+// UpdatePassword
 func (a AdminModel) UpdatePassword(id primitive.ObjectID,
-	ps string) (string,error){
+	oldPassword string, newPassword string) (string, int, error) {
 
 	coll, err := database.GetDB()
 	if err != nil {
-		return "", err
+		return "", http.StatusInternalServerError, err
 	}
-	doc:= form.PasswordUpdate{
-		Password: ps,
+
+	var passwordUpdateForm form.PasswordUpdateForm
+	if err := coll.FindOne(context.TODO(), bson.M{"_id": id}).Decode(&passwordUpdateForm); err != nil {
+		return "", http.StatusInternalServerError, errors.Wrap(err, "failed to get password update form")
 	}
-	update := bson.D{{"$set",doc}}
-	if _ , err := coll.UpdateByID(context.TODO(),id,update); err != nil {
-		return "", errors.Wrap(err, "failed to update document")
+
+	// Compare password
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordUpdateForm.Password),
+		[]byte(oldPassword+string(passwordUpdateForm.PasswordSalt))); err != nil {
+		return "", http.StatusUnauthorized, errors.Wrap(err, "wrong password")
 	}
-	return "update password success",nil
+
+	// Generate password salt
+	salt := make([]byte, 64)
+	_, err = io.ReadFull(rand.Reader, salt)
+	if err != nil {
+		return "", http.StatusInternalServerError, errors.Wrap(err, "failed to generate password salt")
+	}
+
+	// Hash password
+	saltedPassword := newPassword + string(salt)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(saltedPassword), 10)
+	if err != nil {
+		return "", http.StatusInternalServerError, errors.Wrap(err, "failed to hash password")
+	}
+
+	doc := form.PasswordUpdateForm{
+		Password:     string(hashedPassword),
+		PasswordSalt: salt,
+	}
+	update := bson.D{{"$set", doc}}
+
+	if _, err := coll.UpdateByID(context.TODO(), id, update); err != nil {
+		return "", http.StatusInternalServerError, errors.Wrap(err, "failed to update document")
+	}
+
+	return "update password success", http.StatusOK, nil
 }
 
-//deleteAdmin
-func (a AdminModel) DeleteAdmin(id primitive.ObjectID) (string, error){
+//delete
+func (a AdminModel) DeleteAdmin(id primitive.ObjectID) (string, error) {
 	coll, err := database.GetDB()
 	if err != nil {
 		return "", err
 	}
 
-	filter := bson.D{{"_id",id}}
+	filter := bson.M{"_id": id}
 
-	if _ ,err := coll.DeleteOne(context.TODO(),filter); err != nil{
+	if _, err := coll.DeleteOne(context.TODO(), filter); err != nil {
 		return "", errors.Wrap(err, "failed to delete document")
 	}
-	return "delete success",nil
+	return "delete success", nil
 }

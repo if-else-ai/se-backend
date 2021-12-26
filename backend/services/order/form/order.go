@@ -48,13 +48,15 @@ type OrderUpdate struct {
 }
 
 type CreateOrderForm struct {
-	ID             primitive.ObjectID `json:"id" bson:"_id"`
-	UserID         primitive.ObjectID `json:"userId" bson:"userId"`
-	Status         string             `json:"status" bson:"status"`
-	Address        string             `json:"address" bson:"address"`
-	Detail         OrderDetail        `json:"detail" bson:"detail"`
-	UserDetail     UserDetail         `json:"userDetail" bson:"userDetail"`
-	TrackingNumber string             `json:"trackingNumber" bson:"trackingNumber"`
+	ID             primitive.ObjectID   `json:"id" bson:"_id"`
+	UserID         primitive.ObjectID   `json:"userId" bson:"userId"`
+	Status         string               `json:"status" bson:"status"`
+	Address        string               `json:"address" bson:"address"`
+	Detail         OrderDetail          `json:"detail" bson:"detail"`
+	UserDetail     UserDetail           `json:"userDetail" bson:"userDetail"`
+	TrackingNumber string               `json:"trackingNumber" bson:"trackingNumber"`
+	CreateDate     primitive.DateTime   `json:"createDate" bson:"createDate"`
+	UpdateDate     []primitive.DateTime `json:"updateDate" bson:"updateDate"`
 }
 
 type CreateOrderResponse struct {
@@ -70,12 +72,13 @@ type UpdateOrderStatusFrom struct {
 }
 
 type ProductUpdate struct {
-	ProductId primitive.ObjectID    `json:"productId" bson:"productId"`
-	Name      string                `json:"name" bson:"name"`
-	Price     float32               `json:"price" bson:"price"`
-	Quantity  int32                 `json:"quantity" bson:"quantity"`
-	Option    []ProductOptionUpdate `json:"option" bson:"option"`
-	Image     []string              `json:"image" bson:"image"`
+	ProductId    primitive.ObjectID    `json:"productId" bson:"productId"`
+	Name         string                `json:"name" bson:"name"`
+	Price        float32               `json:"price" bson:"price"`
+	Quantity     int32                 `json:"quantity" bson:"quantity"`
+	Option       []ProductOptionUpdate `json:"option" bson:"option"`
+	Image        []string              `json:"image" bson:"image"`
+	SoldQuantity int32                 `json:"soldQuantity" bson:"soldQuantity"`
 }
 
 type ProductOptionUpdate struct {
